@@ -1,0 +1,100 @@
+#pragma kernel GenerateMesh
+
+#include "Tables.cginc"
+#include "../Consts.cginc"
+
+struct Triangle
+{
+	float3 v0;
+	float3 n0;
+	float3 v1;
+	float3 n1;
+	float3 v2;
+	float3 n2;
+};
+
+StructuredBuffer<float4> Voxels;
+StructuredBuffer<float3> VoxelsNormals;
+AppendStructuredBuffer<Triangle> Results;
+
+float floorValue;
+uint3 blockDim;
+uint offsetZ;
+uint offsetY;
+
+// Interpolation lineaire de la position du sommet
+float3 vlerp(float4 p1, float4 p2, float floorValue) {
+	float4 res = p1 + (floorValue - p1.w) * (p2 - p1) / (p2.w - p1.w);
+	return float3(res.x, res.y, res.z);
+}
+
+// Interpolation lineaire de la normale
+float3 nlerp(float3 p1, float3 p2, float p1w, float p2w, float floorValue) {
+	return normalize(p1 + (floorValue - p1w) * (p2 - p1) / (p2w - p1w));
+}
+
+[numthreads(SIZE, 1, SIZE)]
+void GenerateMesh(uint3 gid : SV_GroupID, uint3 tid : SV_GroupThreadID)
+{
+	const uint3 pos = uint3(tid.x + gid.x * SIZE, gid.y, tid.z + gid.z * SIZE);
+
+	// Les bordures ne sont pas calculees
+	if (pos.x >= offsetZ - 2 || pos.z >= offsetZ - 2 || gid.y >= blockDim.y - 2) return;
+
+	// Index de depart dans le tableau du thread actuel
+	const uint start_index = pos.x + pos.z * offsetZ + pos.y * offsetY;
+
+	// Recupere les points associe au sommets a traiter
+	const float4 cube[8] = {
+		Voxels[start_index],
+		Voxels[start_index + 1],
+		Voxels[start_index + offsetZ + 1],
+		Voxels[start_index + offsetZ],
+		Voxels[start_index + offsetY],
+		Voxels[start_index + 1 + offsetY],
+		Voxels[start_index + offsetZ + 1 + offsetY],
+		Voxels[start_index + offsetZ + offsetY]
+	};
+
+	const float3 cube_N[8] = {
+		VoxelsNormals[start_index],
+		VoxelsNormals[start_index + 1],
+		VoxelsNormals[start_index + offsetZ + 1],
+		VoxelsNormals[start_index + offsetZ],
+		VoxelsNormals[start_index + offsetY],
+		VoxelsNormals[start_index + 1 + offsetY],
+		VoxelsNormals[start_index + offsetZ + 1 + offsetY],
+		VoxelsNormals[start_index + offsetZ + offsetY]
+	};
+
+	// Determination de la configuration pour le cube actuel
+	int cubeConfig = 0;
+	[unroll(8)] for (int i = 0; i < 8; i++)
+		cubeConfig |= (int)step(cube[i].w, floorValue) << i;
+
+	uint a0, b0, a1, b1, a2, b2;
+	for (int j = 0; triangulation[cubeConfig][j] != -1; j += 3) {
+		Triangle tri;
+
+		a0 = edge2vertA[triangulation[cubeConfig][j]];
+		b0 = edge2vertB[triangulation[cubeConfig][j]];
+
+		a1 = edge2vertA[triangulation[cubeConfig][j + 1]];
+		b1 = edge2vertB[triangulation[cubeConfig][j + 1]];
+
+		a2 = edge2vertA[triangulation[cubeConfig][j + 2]];
+		b2 = edge2vertB[triangulation[cubeConfig][j + 2]];
+
+		tri.v0 = vlerp(cube[a0], cube[b0], floorValue);
+		tri.n0 = nlerp(cube_N[a0], cube_N[b0], cube[a0].w, cube[b0].w, floorValue);
+
+		tri.v1 = vlerp(cube[a1], cube[b1], floorValue);
+		tri.n1 = nlerp(cube_N[a1], cube_N[b1], cube[a1].w, cube[b1].w, floorValue);
+
+		tri.v2 = vlerp(cube[a2], cube[b2], floorValue);
+		tri.n2 = nlerp(cube_N[a2], cube_N[b2], cube[a2].w, cube[b2].w, floorValue);
+
+		Results.Append(tri);
+	}
+
+}

@@ -1,0 +1,55 @@
+#pragma kernel ComputeVoxels
+
+#include "../Consts.cginc"
+#include "includes/SimplexNoise.cginc"
+
+RWStructuredBuffer<float4> Results;
+Buffer<float> Heights;
+Texture2D<float4> Gradient;
+//SamplerState sampler_point_repeat;
+
+float3 origin; // Position de depart dans le monde
+float scale;
+float persistance;
+float lacunarity;
+int octaves;
+int chunkY;
+int maxHeight;
+int minHeight;
+int minWorldHeight = 5;
+float heightMultiplier = 20;
+uint3 blockDim;
+float3 local2World; // Calcul de coordonnees dans le chunk
+
+[numthreads(SIZE, 1, SIZE)]
+void ComputeVoxels(uint3 gid : SV_GroupID, uint3 tid : SV_GroupThreadID)
+{
+    // Coordonnees locale du bruit, la coordonee globale est obtenue avec l'offset
+    const float3 pos = float3(tid.x + gid.x * SIZE, gid.y, tid.z + gid.z * SIZE);
+
+    // Index dans le tableau du thread actuel
+    const int result_index = pos.x + pos.z * SIZE * blockDim.x + pos.y * S_SIZE * blockDim.x * blockDim.x;
+    // Index dans le tableau des hauteurs du thread actuel
+    const float3 localPos = pos * local2World;
+    const float3 worldPos = origin + localPos;
+    
+    // Calcul du bruit avec fBM
+    float noiseHeight = 0;
+    float amplitude = 1;
+    float frequency = 1;
+
+    for (int i = 0; i < octaves; i++) {
+        float v = snoise(worldPos / scale * frequency) * 0.5 + 0.5;
+        noiseHeight += v * amplitude;
+
+        amplitude *= persistance;
+        frequency *= lacunarity;
+    }
+
+    Results[result_index] = float4(
+    localPos.x,
+    localPos.y,
+    localPos.z,
+    noiseHeight / octaves  * (1 - smoothstep(minHeight, maxHeight, worldPos.y))
+    );
+}
