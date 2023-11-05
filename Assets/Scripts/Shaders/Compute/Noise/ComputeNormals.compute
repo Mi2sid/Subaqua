@@ -1,0 +1,26 @@
+﻿#pragma kernel ComputeNormals
+
+#include "../Consts.cginc"
+
+StructuredBuffer<float4> Voxels;
+RWStructuredBuffer<float3> Results;
+
+uint3 blockDim;
+uint offsetZ;
+uint offsetY;
+
+[numthreads(SIZE, 1, SIZE)]
+void ComputeNormals(uint3 gid : SV_GroupID, uint3 tid : SV_GroupThreadID)
+{
+	const float3 pos = float3(tid.x + gid.x * SIZE, gid.y, tid.z + gid.z * SIZE);
+	const int result_index = pos.x + pos.z * SIZE * blockDim.x + pos.y * S_SIZE * blockDim.x * blockDim.x;
+
+
+	const float v = Voxels[result_index].w;
+	const float dx = v - Voxels[result_index + 1].w;
+	const float dy = v - Voxels[result_index + offsetY].w;
+	const float dz = v - Voxels[result_index + offsetZ].w;
+
+	Results[result_index] = normalize(float3(dx, dy, dz));
+
+}

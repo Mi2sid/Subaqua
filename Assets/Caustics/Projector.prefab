@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6575901414504839168
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6575901414504839173}
+  - component: {fileID: 6575901414504839170}
+  - component: {fileID: 6575901414504839171}
+  m_Layer: 0
+  m_Name: Projector
+  m_TagString: Projector
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6575901414504839173
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6575901414504839168}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 696.67804, y: 10.45937, z: 93.47334}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6575901414504839170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6575901414504839168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61786b74a64c5a74ab6446418fdec5a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fps: 30
+  frames:
+  - {fileID: 2800000, guid: 42de246071f6c1a4abdaa64f1f9ee828, type: 3}
+  - {fileID: 2800000, guid: 8f5726f7f83c94c4fa533c4c4a737164, type: 3}
+  - {fileID: 2800000, guid: 735e13b2281dd9c47a44fe1e5f85d9ad, type: 3}
+  - {fileID: 2800000, guid: 4175ba10d8683d14796cfdc1e167f8db, type: 3}
+  - {fileID: 2800000, guid: af0b8671c6832014faa4cc7c3be37600, type: 3}
+  - {fileID: 2800000, guid: 1f290b28dc623ca43b3985cf73a64f56, type: 3}
+  - {fileID: 2800000, guid: e7cec5dc3847f3d43afe68b1217fecfb, type: 3}
+  - {fileID: 2800000, guid: fb1343a0826c27048a92ccfd43f478cd, type: 3}
+  - {fileID: 2800000, guid: f3e9180b5be9f614ea79c82be51eeb92, type: 3}
+  - {fileID: 2800000, guid: 96c40b4e64ba9404a9644aa5214a02d5, type: 3}
+  - {fileID: 2800000, guid: b8c5878b06be9634ca6e514633f5f0ef, type: 3}
+  - {fileID: 2800000, guid: d0d153680a8ae61438b8e249278c0a2f, type: 3}
+  - {fileID: 2800000, guid: 319a554f016d52041b067cfb201b0d92, type: 3}
+  - {fileID: 2800000, guid: b0c4143e7e466e049b75f4145478dcc3, type: 3}
+  - {fileID: 2800000, guid: 11086038e97366946be587f44f70d866, type: 3}
+  - {fileID: 2800000, guid: e087722c8517d3f418b35740386262c2, type: 3}
+  - {fileID: 2800000, guid: 7eef4642594351f40b8ef8904186ec8d, type: 3}
+  - {fileID: 2800000, guid: a884cd16768a91e45aa73b483b6a6780, type: 3}
+  - {fileID: 2800000, guid: 9295a827c3068f347a47f011c334e519, type: 3}
+  - {fileID: 2800000, guid: ce5f85a6d111653438626c010d7eaf19, type: 3}
+  - {fileID: 2800000, guid: ff81558d707b7b94f9f0db3a24fa77dc, type: 3}
+  - {fileID: 2800000, guid: c9dc6173f1b29da4f807b5ff52b9542f, type: 3}
+  - {fileID: 2800000, guid: 6251b629f006e5242812b55d8461891b, type: 3}
+  - {fileID: 2800000, guid: e7399269da3ecab4ab6960e10c9f6be5, type: 3}
+  - {fileID: 2800000, guid: d7ce69966e00cb841becc635e549c8ba, type: 3}
+  - {fileID: 2800000, guid: 88f50c233c115a04e8466cbc6d93225f, type: 3}
+  - {fileID: 2800000, guid: 7631b77a3b177a14ebba2a342ad6bcc7, type: 3}
+  - {fileID: 2800000, guid: e6431cfdc951a3a4e9419a71237f02ea, type: 3}
+  - {fileID: 2800000, guid: c5983b1381c680a4f970329ebd0c4f08, type: 3}
+  - {fileID: 2800000, guid: 6721022a46bdad34e92b5cdcacf84b0d, type: 3}
+--- !u!119 &6575901414504839171
+Projector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6575901414504839168}
+  m_Enabled: 0
+  serializedVersion: 2
+  m_NearClipPlane: 0
+  m_FarClipPlane: 0.01
+  m_FieldOfView: 0.00000001
+  m_AspectRatio: 1
+  m_Orthographic: 1
+  m_OrthographicSize: 1
+  m_Material: {fileID: 2100000, guid: bb34a03f3ee92e04d8ab12b1f3dc430b, type: 2}
+  m_IgnoreLayers:
+    serializedVersion: 2
+    m_Bits: 0
