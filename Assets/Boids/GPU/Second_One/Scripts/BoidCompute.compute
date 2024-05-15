@@ -1,5 +1,5 @@
 ﻿#pragma kernel CSMain
-//Adapate depuis les traveaux de Sebastian Lague (src : https://www.youtube.com/watch?v=bqtqltqcQhw)
+//Adapte depuis les travaux de Sebastian Lague (src : https://www.youtube.com/watch?v=bqtqltqcQhw)
 
 struct GPU_BOID
 {
@@ -19,14 +19,18 @@ struct GPU_BOID
     float3 seperationForce;
 };
 
+struct GPU_PARAMETERS {
+    float percRay;
+    float avoidRay;
+    float maxSpeed;
+    float maxSteerForce;
+};
+
 RWStructuredBuffer<GPU_BOID> boids;
+uniform StructuredBuffer<GPU_PARAMETERS> boidParameters;
 int sizeListOfBoids;
 
-float maxSpeed;
-float maxSteerForce;
-
-float percRay;
-float avoidRay;
+int listOfBoidID;
 
 float temp;
 
@@ -43,35 +47,37 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
             float dist = offset.x * offset.x + offset.y * offset.y + offset.z * offset.z;
 
-            if (dist < percRay * percRay)
+            if (dist < boidParameters[listOfBoidID].percRay * boidParameters[listOfBoidID].percRay)
             {
                 boids[id.x].nbTeammates += 1;
                 boids[id.x].groupMiddle += boid.pos;
                 boids[id.x].groupBoss += boid.dir;
 
-                if (dist < avoidRay * avoidRay)
+                if (dist < boidParameters[listOfBoidID].avoidRay * boidParameters[listOfBoidID].avoidRay)
                 {
                     boids[id.x].avoid -= offset / dist;
                 }
             }
         }
 
-        temp = length(normalize(boids[id.x].groupBoss) * maxSpeed - boids[id.x].vel);
+        temp = length(normalize(boids[id.x].groupBoss) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel);
         
-        if (temp * temp > maxSteerForce * maxSteerForce)
-            boids[id.x].alignmentForce = (normalize(normalize(boids[id.x].groupBoss) * maxSpeed - boids[id.x].vel) * maxSteerForce);
-        else boids[id.x].alignmentForce = (normalize(boids[id.x].groupBoss) * maxSpeed - boids[id.x].vel);
+        float maxSteerForceSquare = boidParameters[listOfBoidID].maxSteerForce * boidParameters[listOfBoidID].maxSteerForce;
 
-        temp = length(normalize((boids[id.x].groupMiddle / boids[id.x].nbTeammates) - boids[id.x].pos) * maxSpeed - boids[id.x].vel);
+        if (temp * temp > maxSteerForceSquare)
+            boids[id.x].alignmentForce = (normalize(normalize(boids[id.x].groupBoss) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel) * boidParameters[listOfBoidID].maxSteerForce);
+        else boids[id.x].alignmentForce = (normalize(boids[id.x].groupBoss) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel);
 
-        if (temp * temp > maxSteerForce * maxSteerForce)
-            boids[id.x].cohesionForce = (normalize(normalize((boids[id.x].groupMiddle / boids[id.x].nbTeammates) - boids[id.x].pos) * maxSpeed - boids[id.x].vel) * maxSteerForce);
-        else boids[id.x].cohesionForce = (normalize((boids[id.x].groupMiddle / boids[id.x].nbTeammates) - boids[id.x].pos) * maxSpeed - boids[id.x].vel);
+        temp = length(normalize((boids[id.x].groupMiddle / boids[id.x].nbTeammates) - boids[id.x].pos) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel);
 
-        temp = length(normalize(boids[id.x].avoid) * maxSpeed - boids[id.x].vel);
+        if (temp * temp > maxSteerForceSquare)
+            boids[id.x].cohesionForce = (normalize(normalize((boids[id.x].groupMiddle / boids[id.x].nbTeammates) - boids[id.x].pos) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel) * boidParameters[listOfBoidID].maxSteerForce);
+        else boids[id.x].cohesionForce = (normalize((boids[id.x].groupMiddle / boids[id.x].nbTeammates) - boids[id.x].pos) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel);
 
-        if (temp * temp > maxSteerForce * maxSteerForce)
-            boids[id.x].seperationForce = (normalize(normalize(boids[id.x].avoid) * maxSpeed - boids[id.x].vel) * maxSteerForce);
-        else boids[id.x].seperationForce = (normalize(boids[id.x].avoid) * maxSpeed - boids[id.x].vel);
+        temp = length(normalize(boids[id.x].avoid) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel);
+
+        if (temp * temp > maxSteerForceSquare)
+            boids[id.x].seperationForce = (normalize(normalize(boids[id.x].avoid) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel) * boidParameters[listOfBoidID].maxSteerForce);
+        else boids[id.x].seperationForce = (normalize(boids[id.x].avoid) * boidParameters[listOfBoidID].maxSpeed - boids[id.x].vel);
     }
 }

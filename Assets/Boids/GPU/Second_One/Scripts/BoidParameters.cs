@@ -11,8 +11,8 @@ public class BoidParameters : ScriptableObject
 
     [Header("Fishs")]
 
-    public float minSpeed = 2;
-    public float maxSpeed = 4;
+    public float minSpeed = 1;
+    public float maxSpeed = 2;
     public float escapeSpeed = 4;
 
     public float percRay = 3;

@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Manager : MonoBehaviour {
+public class Manager : MonoBehaviour
+{
 
     List<Boid>[] listOfBoids;
 
@@ -26,13 +28,18 @@ public class Manager : MonoBehaviour {
 
         listOfBoids = new List<Boid>[System.Enum.GetNames(typeof(Boid.Type)).Length];
 
+        // Créez le ComputeBuffer avec la taille de votre liste de données
+        ComputeBuffer parameterBuffer = new ComputeBuffer(listOfBoids.Length, sizeof(float)*4);
+
+        List<CPU_PARAMETERS> listOfBoidData = new List<CPU_PARAMETERS>();
+
         for (int it = 0; it < listOfBoids.Length; it++)
         {
             listOfBoids[it] = new List<Boid> { };
 
             for (int i = 0; i < (int)((percentSpawn[it] / 100.0f) * nbOfBoids); i++)
             {
-                Vector3 pos = playerPos + Random.insideUnitSphere * spawnRay;
+                Vector3 pos = playerPos + UnityEngine.Random.insideUnitSphere * spawnRay;
 
                 Boid boid = Instantiate(prefabs[it]);
 
@@ -40,23 +47,49 @@ public class Manager : MonoBehaviour {
 
                 boid.transform.position = pos;
 
-                boid.transform.forward = Random.insideUnitSphere;
+                Vector3 randomDirection = UnityEngine.Random.onUnitSphere;
+
+                // Restreindre la composante Y pour éviter les mouvements purement verticaux
+                float maxInclinationAngle = 30f; // Angle maximal d'inclinaison en degrés
+                float maxInclinationRadians = maxInclinationAngle * Mathf.Deg2Rad;
+                randomDirection.y = Mathf.Sin(maxInclinationRadians);
+
+                // Recalculer la composante X et Z pour que le vecteur soit unitaire
+                float horizontalMagnitude = Mathf.Cos(maxInclinationRadians);
+                randomDirection.x *= horizontalMagnitude;
+                randomDirection.z *= horizontalMagnitude;
+
+                randomDirection.Normalize();
+
+                boid.transform.forward = randomDirection;
+
+                boid.transform.forward = UnityEngine.Random.insideUnitSphere;
 
                 listOfBoids[it].Add(boid);
 
                 boid.Init(boidParam[it]);
             }
+
+            CPU_PARAMETERS boidData = new CPU_PARAMETERS();
+            boidData.percRay = boidParam[it].percRay;
+            boidData.avoidRay = boidParam[it].avoidRay;
+            boidData.maxSpeed = boidParam[it].maxSpeed;
+            boidData.maxSteerForce = boidParam[it].maxSteerForce;
+
+            listOfBoidData.Add(boidData);
         }
 
+        parameterBuffer.SetData(listOfBoidData.ToArray());
 
-        
+        // Passez le ComputeBuffer au shader
+        computeShader.SetBuffer(0, "boidParameters", parameterBuffer);
     }
 
-    void Update() 
+    void Update()
     {
 
         //Initailisation des parametres
-        if (listOfBoids != null) 
+        if (listOfBoids != null)
         {
             CPU_BOID[][] cpuBoid = new CPU_BOID[listOfBoids.Length][];
             ComputeBuffer[] computeBuffer = new ComputeBuffer[listOfBoids.Length];
@@ -87,15 +120,12 @@ public class Manager : MonoBehaviour {
 
                     computeShader.SetBuffer(0, "boids", computeBuffer[it]);
                     computeShader.SetInt("sizeListOfBoids", listOfBoids[it].Count);
-                    computeShader.SetFloat("percRay", boidParam[it].percRay);
-                    computeShader.SetFloat("avoidRay", boidParam[it].avoidRay);
-                    computeShader.SetFloat("maxSpeed", boidParam[it].maxSpeed);
-                    computeShader.SetFloat("maxSteerForce", boidParam[it].maxSteerForce);
+                    computeShader.SetInt("listOfBoidID", it);
 
                     //Appel du compute shader (GPU)
                     computeShader.Dispatch(0, threadGroups, 1, 1);
 
-                    //Recupertation des donnees calculee par le compute shader
+                    //Recuperation des donnees calculee par le compute shader
                     computeBuffer[it].GetData(cpuBoid[it]);
                     computeBuffer[it].Dispose();
 
@@ -117,10 +147,19 @@ public class Manager : MonoBehaviour {
                     }
                 }
             }
-            
 
+            cpuBoid = null;
+            computeBuffer = null;
             //computeBuffer.Release();
         }
+    }
+
+    public struct CPU_PARAMETERS
+    {
+        public float percRay;
+        public float avoidRay;
+        public float maxSpeed;
+        public float maxSteerForce;
     }
     public struct CPU_BOID
     {
