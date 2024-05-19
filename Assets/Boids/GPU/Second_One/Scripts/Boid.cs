@@ -115,6 +115,7 @@ public class Boid : MonoBehaviour
         RaycastHit hitTerrain;
         if (Physics.Raycast(transform.position, rayDirection, out hitTerrain, boidParam.detectCollDst))
         {
+            RaycastHit[] hits = new RaycastHit[1];
             //Parcours de la liste des directions echappatoires
             for (int i = 0; i < tab_Dir.Length; i +=2)
             {
@@ -122,8 +123,8 @@ public class Boid : MonoBehaviour
                 Ray ray = new Ray(transform.position, dir_gold);
 
                 //Choisir cette direction si elle permet d'eviter l'obstacle
-                bool canEscape = !Physics.Raycast(ray, out RaycastHit hit2, boidParam.detectCollDst, boidParam.obstacleLayer);
-                if (canEscape)
+                int nbCollision = Physics.RaycastNonAlloc(ray, hits, boidParam.detectCollDst, boidParam.obstacleLayer);
+                if (nbCollision == 0)
                 {
                     escapeDir = dir_gold;
                     break;
@@ -196,8 +197,13 @@ public class Boid : MonoBehaviour
                         //fuite
                         //escapeDir = -(transform.position - player.transform.position);
 
-                        // Rotation de 40 degrés dans le plan horizontal
                         float angleInRadians = 40f * Mathf.Deg2Rad;
+
+                        if (Vector3.Cross(directionToPlayer, transform.forward).y > 0)
+                        {
+                            angleInRadians = -angleInRadians;
+                        }
+
                         Vector3 rotatedDirection = new Vector3(
                             directionToPlayer.x * Mathf.Cos(angleInRadians) - directionToPlayer.z * Mathf.Sin(angleInRadians),
                             directionToPlayer.y,
