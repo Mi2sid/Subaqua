@@ -23,9 +23,9 @@ public class BoidParameters : ScriptableObject
 
     public LayerMask obstacleLayer;
 
-    public float sphereRad = .5f;
+    //public float sphereRad = .5f;
     public float weight = 10;
-    public float detectCollDst = 5;
+    public float detectCollDst = 10;
 
     [Header("Scare")]
 

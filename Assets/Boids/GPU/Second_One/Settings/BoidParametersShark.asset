@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   avgSpeed: 2
   minSpeed: 1
-  maxSpeed: 3
+  maxSpeed: 1
   escapeSpeed: 0
   percRay: 3
   avoidRay: 3

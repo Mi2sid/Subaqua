@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b44f765160a18428198d981d7e4c35, type: 3}
   m_Name: BoidParametersChirugienBleu
   m_EditorClassIdentifier: 
-  avgSpeed: 3
+  avgSpeed: 2.5
   minSpeed: 2
-  maxSpeed: 4
+  maxSpeed: 3
   escapeSpeed: 5
   percRay: 3
   avoidRay: 3
@@ -22,7 +22,6 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 1152
-  sphereRad: 0.5
   weight: 8
   detectCollDst: 5
   scareLayer:

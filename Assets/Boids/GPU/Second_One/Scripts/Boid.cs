@@ -31,14 +31,14 @@ public class Boid : MonoBehaviour
 
     BoidParameters boidParam;
 
-    //Collider boidCollider = GetComponent<Collider>();
-
     public Type type;
 
     float scaredTimer = 0;
     Vector3 escapeDir = Vector3.zero;
 
     private GameObject player;
+
+    public float rayAngleOffset = 5f;
 
     public enum Type
     {
@@ -105,10 +105,15 @@ public class Boid : MonoBehaviour
         velocity = transform.forward * boidParam.avgSpeed;
     }
 
-    public void terrain_collision(ref Vector3 collisionForce, ref Vector3 sumForce, ref Vector3 escapeDir)
+    public bool terrain_collision(ref Vector3 collisionForce, ref Vector3 sumForce, ref Vector3 escapeDir)
     {
+        float maxOffset = Mathf.Tan(rayAngleOffset * Mathf.Deg2Rad);
+
+        Vector3 randomOffset = new Vector3(UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset));
+        Vector3 rayDirection = (transform.forward + randomOffset).normalized;
+
         RaycastHit hitTerrain;
-        if (Physics.Raycast(transform.position, transform.forward, out hitTerrain, 10f))
+        if (Physics.Raycast(transform.position, rayDirection, out hitTerrain, boidParam.detectCollDst))
         {
             //Parcours de la liste des directions echappatoires
             for (int i = 0; i < tab_Dir.Length; i +=2)
@@ -130,7 +135,10 @@ public class Boid : MonoBehaviour
 
                 //job.tab_Dir.Dispose();
             sumForce += collisionForce;
+            return true;
         }
+
+        return false;
 
     }
 
@@ -178,16 +186,15 @@ public class Boid : MonoBehaviour
                         sumForce += collisionForce;
                     }
 
+
+                    Vector3 directionToPlayer = player.transform.position - transform.position;
                     RaycastHit hitPlayer;
                     int layerMask = 1 << 3;
                     //collision avec le joueur uniquement
-                    if (Physics.Raycast(transform.position, player.transform.position - transform.position, out hitPlayer))
+                    if (Physics.Raycast(transform.position, directionToPlayer, out hitPlayer))
                     {
                         //fuite
                         //escapeDir = -(transform.position - player.transform.position);
-
-                        // Calcul de la direction du joueur par rapport à la position actuelle du boid
-                        Vector3 directionToPlayer = player.transform.position - transform.position;
 
                         // Rotation de 40 degrés dans le plan horizontal
                         float angleInRadians = 40f * Mathf.Deg2Rad;

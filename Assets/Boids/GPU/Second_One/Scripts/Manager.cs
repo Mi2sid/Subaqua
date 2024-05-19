@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst;
+using Unity.Jobs;
+using Unity.Collections;
 using UnityEngine;
+using System.Linq;
 
 public class Manager : MonoBehaviour
 {
@@ -85,6 +89,75 @@ public class Manager : MonoBehaviour
         computeShader.SetBuffer(0, "boidParameters", parameterBuffer);
     }
 
+    //[BurstCompile]
+    //public struct Pass_GPU : IJobParallelFor
+    //{
+
+    //    //public NativeArray<List<Boid>> jobListOfBoids;
+
+    //    public NativeArray<Vector3>[] positions;
+    //    public NativeArray<Vector3>[] directions;
+    //    public NativeArray<Vector3>[] velocities;
+
+    //    public ComputeShader computeShader;
+    //    public CPU_BOID[][] jobCpuBoid;
+    //    public ComputeBuffer[] jobComputeBuffer;
+
+    //    public void Execute(int index)
+    //    {
+    //        if (jobListOfBoids[index] != null)
+    //        {
+    //            int sizeListOfBoids = jobListOfBoids[index].Count;
+    //            jobCpuBoid[index] = new CPU_BOID[sizeListOfBoids];
+
+    //            //Creation du computeBuffer de la taille de la classe CPU_BOID
+    //            jobComputeBuffer[index] = new ComputeBuffer(sizeListOfBoids, (int)(sizeof(int) + 27 * sizeof(float)));
+
+    //            //Le castage en (int) ne fonctionne pas autrement
+    //            int threadGroups = Mathf.CeilToInt(sizeListOfBoids / (float)64);
+
+    //            //Recuperation des donnees du boid a l'instant t
+    //            for (int i = 0; i < jobListOfBoids[index].Count; i++)
+    //            {
+    //                jobCpuBoid[index][i].pos = listOfBoids[index][i].transform.position;
+    //                jobCpuBoid[index][i].dir = listOfBoids[index][i].transform.forward;
+    //                jobCpuBoid[index][i].vel = listOfBoids[index][i].velocity;
+    //            }
+
+    //            //Passage des parametres au GPU
+    //            jobComputeBuffer[index].SetData(jobCpuBoid[index]);
+
+    //            computeShader.SetBuffer(0, "boids", jobComputeBuffer[index]);
+    //            computeShader.SetInt("sizeListOfBoids", jobListOfBoids[index].Count);
+    //            computeShader.SetInt("listOfBoidID", index);
+
+    //            //Appel du compute shader (GPU)
+    //            computeShader.Dispatch(0, threadGroups, 1, 1);
+
+    //            //Recuperation des donnees calculees par le compute shader
+    //            jobComputeBuffer[index].GetData(jobCpuBoid[index]);
+    //            jobComputeBuffer[index].Dispose();
+
+    //            //Attribution de ces valeurs aux boids de la scene (maj CPU)
+    //            for (int i = 0; i < jobListOfBoids[index].Count; i++)
+    //            {
+    //                jobListOfBoids[index][i].nbTeammates = jobCpuBoid[it][i].nbTeammates;
+
+    //                jobListOfBoids[index][i].alignmentForce = jobCpuBoid[index][i].alignmentForce;
+    //                jobListOfBoids[index][i].cohesionForce = jobCpuBoid[index][i].cohesionForce;
+    //                jobListOfBoids[index][i].seperationForce = jobCpuBoid[index][i].seperationForce;
+
+    //                //Debug des 3 lois
+    //                /*Debug.Log("GPU 1: " + listOfBoids[i].alignmentForce);
+    //                Debug.Log("GPU 2: " + listOfBoids[i].cohesionForce);
+    //                Debug.Log("GPU 3: " + listOfBoids[i].seperationForce);*/
+
+    //                jobListOfBoids[index][i].new_Boid();
+    //            }
+    //        }
+    //    }
+    //}
+
     void Update()
     {
 
@@ -93,6 +166,40 @@ public class Manager : MonoBehaviour
         {
             CPU_BOID[][] cpuBoid = new CPU_BOID[listOfBoids.Length][];
             ComputeBuffer[] computeBuffer = new ComputeBuffer[listOfBoids.Length];
+
+            //Boid[] boidArray = listOfBoids.ToArray();
+            //NativeArray<Vector3> positions = new NativeArray<Vector3>(boidArray.Length, Allocator.TempJob);
+            //NativeArray<Vector3> directions = new NativeArray<Vector3>(boidArray.Length, Allocator.TempJob);
+            //NativeArray<Vector3> velocity = new NativeArray<Vector3>(boidArray.Length, Allocator.TempJob);
+
+            //for (int i = 0; i < boidArray.Length; i++)
+            //{
+            //    positions[i] = boidArray[i].transform.position;
+            //    directions[i] = boidArray[i].transform.forward;
+            //    velocity[i] = boidArray[i].velocity;
+            //}
+
+            //Pass_GPU pass_GPU = new Pass_GPU
+            //{
+            //    //jobListOfBoids = new NativeArray<List<Boid>>(boidArray, Allocator.TempJob),
+
+            //    positions = positions,
+            //    directions = directions,
+            //    velocity = velocity,
+            //    computeShader = computeShader,
+            //    jobCpuBoid= cpuBoid,
+            //    jobComputeBuffer = computeBuffer
+            //};
+
+            //JobHandle jobHandle = pass_GPU.Schedule(listOfBoids.Length, threadGroups);
+
+            //// Attendre la fin du job
+            //jobHandle.Complete();
+
+            //// Libérer la mémoire du ComputeBuffer et du NativeArray
+            //jobListOfBoids.Dispose();
+            //cpuBoid = null;
+            //computeBuffer = null;
 
             for (int it = 0; it < listOfBoids.Length; it++)
             {
@@ -125,7 +232,7 @@ public class Manager : MonoBehaviour
                     //Appel du compute shader (GPU)
                     computeShader.Dispatch(0, threadGroups, 1, 1);
 
-                    //Recuperation des donnees calculee par le compute shader
+                    //Recuperation des donnees calculees par le compute shader
                     computeBuffer[it].GetData(cpuBoid[it]);
                     computeBuffer[it].Dispose();
 
@@ -161,6 +268,7 @@ public class Manager : MonoBehaviour
         public float maxSpeed;
         public float maxSteerForce;
     }
+
     public struct CPU_BOID
     {
         public int nbTeammates;

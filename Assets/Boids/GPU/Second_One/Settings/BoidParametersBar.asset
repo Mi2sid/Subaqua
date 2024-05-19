@@ -12,20 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b44f765160a18428198d981d7e4c35, type: 3}
   m_Name: BoidParametersBar
   m_EditorClassIdentifier: 
-  avgSpeed: 4
-  minSpeed: 3
-  maxSpeed: 5
+  avgSpeed: 1.5
+  minSpeed: 1
+  maxSpeed: 2
   escapeSpeed: 5
   percRay: 3
   avoidRay: 3
   maxSteerForce: 4
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 1160
-  sphereRad: 0.5
+    m_Bits: 1152
   weight: 8
   detectCollDst: 5
   scareLayer:
     serializedVersion: 2
-    m_Bits: 2048
+    m_Bits: 2056
   canBeScared: 1

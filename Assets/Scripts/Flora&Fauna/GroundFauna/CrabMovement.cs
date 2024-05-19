@@ -50,15 +50,15 @@ public class CrabMovement : MonoBehaviour
             crabMovement *= moveSpeed * Time.deltaTime;
             transform.position += crabMovement;
 
-
-            if (!Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+            bool isHit = Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask);
+            if (!isHit)
             {
                 crabMovement = Quaternion.Euler(new Vector3(0.0f, crabDirection, 0.0f)) * Vector3.forward;
                 crabMovement *= moveSpeed * Time.deltaTime;
                 transform.position += crabMovement;
             }
 
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+            if (isHit)
             {
                 // Calcul de la hauteur et de la rotation du sol à l'endroit où se trouve le crabe
                 groundCollider = hit.collider.gameObject.GetComponent<MeshCollider>();

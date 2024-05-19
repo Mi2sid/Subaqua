@@ -22,7 +22,6 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 1152
-  sphereRad: 0.5
   weight: 8
   detectCollDst: 5
   scareLayer:
