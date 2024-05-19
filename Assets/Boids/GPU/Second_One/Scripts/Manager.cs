@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using Unity.Burst;
-using Unity.Jobs;
-using Unity.Collections;
+using System.Diagnostics;
 using UnityEngine;
-using System.Linq;
 
 public class Manager : MonoBehaviour
 {
@@ -33,9 +29,9 @@ public class Manager : MonoBehaviour
         listOfBoids = new List<Boid>[System.Enum.GetNames(typeof(Boid.Type)).Length];
 
         // Créez le ComputeBuffer avec la taille de votre liste de données
-        ComputeBuffer parameterBuffer = new ComputeBuffer(listOfBoids.Length, sizeof(float)*4);
+        ComputeBuffer parameterBuffer = new ComputeBuffer(listOfBoids.Length, sizeof(float) * 4);
 
-        List<CPU_PARAMETERS> listOfBoidData = new List<CPU_PARAMETERS>();
+        List<CPU_PARAMETERS> listOfBoidData = new List<CPU_PARAMETERS>();       // mettre les données sur CPU pour ensuite sur GPU
 
         for (int it = 0; it < listOfBoids.Length; it++)
         {
@@ -71,7 +67,7 @@ public class Manager : MonoBehaviour
 
                 listOfBoids[it].Add(boid);
 
-                boid.Init(boidParam[it]);
+                boid.Init(boidParam[it]);       // initialise le boid
             }
 
             CPU_PARAMETERS boidData = new CPU_PARAMETERS();
@@ -79,185 +75,98 @@ public class Manager : MonoBehaviour
             boidData.avoidRay = boidParam[it].avoidRay;
             boidData.maxSpeed = boidParam[it].maxSpeed;
             boidData.maxSteerForce = boidParam[it].maxSteerForce;
-
             listOfBoidData.Add(boidData);
         }
 
-        parameterBuffer.SetData(listOfBoidData.ToArray());
+        parameterBuffer.SetData(listOfBoidData.ToArray());      // mettre les données sur GPU
 
         // Passez le ComputeBuffer au shader
         computeShader.SetBuffer(0, "boidParameters", parameterBuffer);
     }
 
-    //[BurstCompile]
-    //public struct Pass_GPU : IJobParallelFor
-    //{
-
-    //    //public NativeArray<List<Boid>> jobListOfBoids;
-
-    //    public NativeArray<Vector3>[] positions;
-    //    public NativeArray<Vector3>[] directions;
-    //    public NativeArray<Vector3>[] velocities;
-
-    //    public ComputeShader computeShader;
-    //    public CPU_BOID[][] jobCpuBoid;
-    //    public ComputeBuffer[] jobComputeBuffer;
-
-    //    public void Execute(int index)
-    //    {
-    //        if (jobListOfBoids[index] != null)
-    //        {
-    //            int sizeListOfBoids = jobListOfBoids[index].Count;
-    //            jobCpuBoid[index] = new CPU_BOID[sizeListOfBoids];
-
-    //            //Creation du computeBuffer de la taille de la classe CPU_BOID
-    //            jobComputeBuffer[index] = new ComputeBuffer(sizeListOfBoids, (int)(sizeof(int) + 27 * sizeof(float)));
-
-    //            //Le castage en (int) ne fonctionne pas autrement
-    //            int threadGroups = Mathf.CeilToInt(sizeListOfBoids / (float)64);
-
-    //            //Recuperation des donnees du boid a l'instant t
-    //            for (int i = 0; i < jobListOfBoids[index].Count; i++)
-    //            {
-    //                jobCpuBoid[index][i].pos = listOfBoids[index][i].transform.position;
-    //                jobCpuBoid[index][i].dir = listOfBoids[index][i].transform.forward;
-    //                jobCpuBoid[index][i].vel = listOfBoids[index][i].velocity;
-    //            }
-
-    //            //Passage des parametres au GPU
-    //            jobComputeBuffer[index].SetData(jobCpuBoid[index]);
-
-    //            computeShader.SetBuffer(0, "boids", jobComputeBuffer[index]);
-    //            computeShader.SetInt("sizeListOfBoids", jobListOfBoids[index].Count);
-    //            computeShader.SetInt("listOfBoidID", index);
-
-    //            //Appel du compute shader (GPU)
-    //            computeShader.Dispatch(0, threadGroups, 1, 1);
-
-    //            //Recuperation des donnees calculees par le compute shader
-    //            jobComputeBuffer[index].GetData(jobCpuBoid[index]);
-    //            jobComputeBuffer[index].Dispose();
-
-    //            //Attribution de ces valeurs aux boids de la scene (maj CPU)
-    //            for (int i = 0; i < jobListOfBoids[index].Count; i++)
-    //            {
-    //                jobListOfBoids[index][i].nbTeammates = jobCpuBoid[it][i].nbTeammates;
-
-    //                jobListOfBoids[index][i].alignmentForce = jobCpuBoid[index][i].alignmentForce;
-    //                jobListOfBoids[index][i].cohesionForce = jobCpuBoid[index][i].cohesionForce;
-    //                jobListOfBoids[index][i].seperationForce = jobCpuBoid[index][i].seperationForce;
-
-    //                //Debug des 3 lois
-    //                /*Debug.Log("GPU 1: " + listOfBoids[i].alignmentForce);
-    //                Debug.Log("GPU 2: " + listOfBoids[i].cohesionForce);
-    //                Debug.Log("GPU 3: " + listOfBoids[i].seperationForce);*/
-
-    //                jobListOfBoids[index][i].new_Boid();
-    //            }
-    //        }
-    //    }
-    //}
-
     void Update()
     {
-
         //Initailisation des parametres
         if (listOfBoids != null)
         {
-            CPU_BOID[][] cpuBoid = new CPU_BOID[listOfBoids.Length][];
-            ComputeBuffer[] computeBuffer = new ComputeBuffer[listOfBoids.Length];
-
-            //Boid[] boidArray = listOfBoids.ToArray();
-            //NativeArray<Vector3> positions = new NativeArray<Vector3>(boidArray.Length, Allocator.TempJob);
-            //NativeArray<Vector3> directions = new NativeArray<Vector3>(boidArray.Length, Allocator.TempJob);
-            //NativeArray<Vector3> velocity = new NativeArray<Vector3>(boidArray.Length, Allocator.TempJob);
-
-            //for (int i = 0; i < boidArray.Length; i++)
-            //{
-            //    positions[i] = boidArray[i].transform.position;
-            //    directions[i] = boidArray[i].transform.forward;
-            //    velocity[i] = boidArray[i].velocity;
-            //}
-
-            //Pass_GPU pass_GPU = new Pass_GPU
-            //{
-            //    //jobListOfBoids = new NativeArray<List<Boid>>(boidArray, Allocator.TempJob),
-
-            //    positions = positions,
-            //    directions = directions,
-            //    velocity = velocity,
-            //    computeShader = computeShader,
-            //    jobCpuBoid= cpuBoid,
-            //    jobComputeBuffer = computeBuffer
-            //};
-
-            //JobHandle jobHandle = pass_GPU.Schedule(listOfBoids.Length, threadGroups);
-
-            //// Attendre la fin du job
-            //jobHandle.Complete();
-
-            //// Libérer la mémoire du ComputeBuffer et du NativeArray
-            //jobListOfBoids.Dispose();
-            //cpuBoid = null;
-            //computeBuffer = null;
-
-            for (int it = 0; it < listOfBoids.Length; it++)
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
             {
-                if (listOfBoids[it] != null)
+                CPU_BOID[][] cpuBoid = new CPU_BOID[listOfBoids.Length][];
+                ComputeBuffer[] computeBuffer = new ComputeBuffer[listOfBoids.Length];
+
+                for (int it = 0; it < listOfBoids.Length; it++)
                 {
-                    int sizeListOfBoids = listOfBoids[it].Count;
-                    cpuBoid[it] = new CPU_BOID[sizeListOfBoids];
-
-                    //Creation du computeBuffer de la taille de la classe CPU_BOID
-                    computeBuffer[it] = new ComputeBuffer(sizeListOfBoids, (int)(sizeof(int) + 27 * sizeof(float)));
-
-                    //Le castage en (int) ne fonctionne pas autrement
-                    int threadGroups = Mathf.CeilToInt(sizeListOfBoids / (float)64);
-
-                    //Recuperation des donnees du boid a l'instant t
-                    for (int i = 0; i < listOfBoids[it].Count; i++)
+                    if (listOfBoids[it] != null)
                     {
-                        cpuBoid[it][i].pos = listOfBoids[it][i].transform.position;
-                        cpuBoid[it][i].dir = listOfBoids[it][i].transform.forward;
-                        cpuBoid[it][i].vel = listOfBoids[it][i].velocity;
-                    }
+                        int sizeListOfBoids = listOfBoids[it].Count;                // on récupère le nombre de boid de chaque type de boid.
+                        //{ UnityEngine.Debug.Log("Score du joueur : " + sizeListOfBoids); }
 
-                    //Passage des parametres au GPU
-                    computeBuffer[it].SetData(cpuBoid[it]);
+                        cpuBoid[it] = new CPU_BOID[sizeListOfBoids];
 
-                    computeShader.SetBuffer(0, "boids", computeBuffer[it]);
-                    computeShader.SetInt("sizeListOfBoids", listOfBoids[it].Count);
-                    computeShader.SetInt("listOfBoidID", it);
+                        //Creation du computeBuffer de la taille de la classe CPU_BOID
+                        computeBuffer[it] = new ComputeBuffer(sizeListOfBoids, (int)(sizeof(int) + 27 * sizeof(float)));
 
-                    //Appel du compute shader (GPU)
-                    computeShader.Dispatch(0, threadGroups, 1, 1);
+                        //Le castage en (int) ne fonctionne pas autrement
+                        int threadGroups = Mathf.CeilToInt(sizeListOfBoids / (float)64);
 
-                    //Recuperation des donnees calculees par le compute shader
-                    computeBuffer[it].GetData(cpuBoid[it]);
-                    computeBuffer[it].Dispose();
+                        for (int i = 0; i < listOfBoids[it].Count; i++)
+                        {
+                            Boid boid = listOfBoids[it][i];
+                            Vector3 viewportPos = mainCamera.WorldToViewportPoint(boid.transform.position);
 
-                    //Attribution de ces valeurs aux boids de la scene (maj CPU)
-                    for (int i = 0; i < listOfBoids[it].Count; i++)
-                    {
-                        listOfBoids[it][i].nbTeammates = cpuBoid[it][i].nbTeammates;
+                            // Check if boid is within the camera's viewport
+                            if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
+                            {
+                                cpuBoid[it][i].pos = boid.transform.position;
+                                cpuBoid[it][i].dir = boid.transform.forward;
+                                cpuBoid[it][i].vel = boid.velocity;
+                            }
+                        }
 
-                        listOfBoids[it][i].alignmentForce = cpuBoid[it][i].alignmentForce;
-                        listOfBoids[it][i].cohesionForce = cpuBoid[it][i].cohesionForce;
-                        listOfBoids[it][i].seperationForce = cpuBoid[it][i].seperationForce;
+                        //Passage des parametres au GPU
+                        computeBuffer[it].SetData(cpuBoid[it]);
 
-                        //Debug des 3 lois
-                        /*Debug.Log("GPU 1: " + listOfBoids[i].alignmentForce);
-                        Debug.Log("GPU 2: " + listOfBoids[i].cohesionForce);
-                        Debug.Log("GPU 3: " + listOfBoids[i].seperationForce);*/
+                        computeShader.SetBuffer(0, "boids", computeBuffer[it]);
+                        computeShader.SetInt("sizeListOfBoids", listOfBoids[it].Count);
+                        computeShader.SetInt("listOfBoidID", it);
 
-                        listOfBoids[it][i].new_Boid();
+                        //Appel du compute shader (GPU)
+                        computeShader.Dispatch(0, threadGroups, 1, 1);
+
+                        //Recuperation des donnees calculee par le compute shader
+                        computeBuffer[it].GetData(cpuBoid[it]);
+                        computeBuffer[it].Dispose();
+
+                        //Attribution de ces valeurs aux boids de la scene (maj CPU)
+                        for (int i = 0; i < listOfBoids[it].Count; i++)
+                        {
+                            Boid boid = listOfBoids[it][i];
+                            Vector3 viewportPos = mainCamera.WorldToViewportPoint(boid.transform.position);
+
+                            // Check if boid is within the camera's viewport
+                            if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
+                            {
+                                boid.nbTeammates = cpuBoid[it][i].nbTeammates;
+                                boid.alignmentForce = cpuBoid[it][i].alignmentForce;
+                                boid.cohesionForce = cpuBoid[it][i].cohesionForce;
+                                boid.seperationForce = cpuBoid[it][i].seperationForce;
+
+                                //Debug des 3 lois
+                                /*Debug.Log("GPU 1: " + listOfBoids[i].alignmentForce);
+                                Debug.Log("GPU 2: " + listOfBoids[i].cohesionForce);
+                                Debug.Log("GPU 3: " + listOfBoids[i].seperationForce);*/
+
+                                boid.new_Boid();
+                            }
+                        }
                     }
                 }
-            }
 
-            cpuBoid = null;
-            computeBuffer = null;
-            //computeBuffer.Release();
+                cpuBoid = null;
+                computeBuffer = null;
+                //computeBuffer.Release();
+            }
         }
     }
 
