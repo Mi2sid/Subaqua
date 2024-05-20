@@ -24,7 +24,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 200}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 12894
+  controlID: 18716
 --- !u!114 &2
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -141,7 +141,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 200}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 12895
+  controlID: 18717
 --- !u!114 &4
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -166,7 +166,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 12896
+  controlID: 18718
 --- !u!114 &5
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -186,8 +186,8 @@ MonoBehaviour:
     y: 0
     width: 297
     height: 381
-  m_MinSize: {x: 201, y: 221}
-  m_MaxSize: {x: 4001, y: 4021}
+  m_MinSize: {x: 200, y: 200}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 6}
   m_Panes:
   - {fileID: 6}
@@ -226,7 +226,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: c8a112fe36fbffffa4620000c863000004640000
+      m_ExpandedIDs: cccac8fd1c55d7fd160200fec8a112fe36fbffffa4620000c863000004640000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -7863,13 +7863,13 @@ MonoBehaviour:
   m_Position:
     serializedVersion: 2
     x: 0
-    y: 406.4
-    width: 1161.6
-    height: 316.4
+    y: 381
+    width: 1542
+    height: 566
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 19333
+  controlID: 18647
 --- !u!114 &13
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -7918,9 +7918,9 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 480
-    width: 867.8
-    height: 295.4
+    y: 384
+    width: 823
+    height: 439.4
   m_ViewDataDictionary: {fileID: 0}
   m_OverlayCanvas:
     m_LastAppliedPresetName: Default
@@ -7938,15 +7938,15 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Boids/GPU/Second_One/Scripts
+    - Assets/Scenes
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets/Boids/GPU/Second_One/Scripts
+  - Assets/Scenes
   m_LastFoldersGridSize: -1
-  m_LastProjectPath: C:\M1 ISICG\S2\ADL\Subaqua-camille v1\Subaqua
+  m_LastProjectPath: C:\Users\Camille\Desktop\subaqua\Subaqua
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
@@ -8006,10 +8006,10 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 04210000
-    m_LastClickedInstanceID: 8452
+    m_SelectedInstanceIDs: d2f6ffff
+    m_LastClickedInstanceID: -2350
     m_HadKeyboardFocusLastEvent: 1
-    m_ExpandedInstanceIDs: c6230000c85a0000485a0000745a000026740000d8670000c2670000287c00008a670000427400009267000082670000467400008ea6000076670000de670000e4670000e8ac0000cc85000044ad000042ad000040ad0000eef001000af1010030f1010016f1010024f10100f6f00100f4f001001cf1010002880000e6f00100b27e0000647c000012800000c6800000d8800000c4800000c0800000da8000002e950000c29d0000
+    m_ExpandedInstanceIDs: c6230000c85a0000485a0000745a000026740000d8670000c2670000287c00008a670000427400009267000082670000467400008ea6000076670000de670000e4670000e8ac0000cc85000044ad000042ad000040ad0000eef001000af1010030f1010016f1010024f10100f6f00100f4f001001cf1010002880000e6f00100b27e0000647c000012800000c6800000d8800000c4800000c0800000da800000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -8084,8 +8084,8 @@ MonoBehaviour:
     y: 0
     width: 512
     height: 566
-  m_MinSize: {x: 230, y: 250}
-  m_MaxSize: {x: 10000, y: 10000}
+  m_MinSize: {x: 232, y: 271}
+  m_MaxSize: {x: 10002, y: 10021}
   m_ActualView: {fileID: 17}
   m_Panes:
   - {fileID: 17}
@@ -8132,21 +8132,21 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Boids/GPU/Second_One/Settings
+    - Assets/Boids/GPU/Second_One/Scripts
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Boids/GPU/Second_One/Settings
+  - Assets/Boids/GPU/Second_One/Scripts
   m_LastFoldersGridSize: -1
   m_LastProjectPath: C:\Users\vang5\Desktop\Subaqua
   m_LockTracker:
     m_IsLocked: 1
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 6e770000
-    m_LastClickedID: 30574
+    m_SelectedIDs: 64770000
+    m_LastClickedID: 30564
     m_ExpandedIDs: 000000004477000046770000507700006677000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
@@ -8200,8 +8200,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 649d12fe
-    m_LastClickedInstanceID: -32334492
+    m_SelectedInstanceIDs: 68c6c8fd
+    m_LastClickedInstanceID: -37173656
     m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs: cc85000040ad0000
     m_RenameOverlay:
@@ -8230,7 +8230,7 @@ MonoBehaviour:
     m_ScrollPosition: {x: 0, y: 0}
     m_GridSize: 16
   m_SkipHiddenPackages: 0
-  m_DirectoriesAreaWidth: 50
+  m_DirectoriesAreaWidth: 200
 --- !u!114 &18
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -8292,7 +8292,7 @@ MonoBehaviour:
     m_CachedPref: -472
     m_ControlHash: -371814159
     m_PrefName: Preview_InspectorPreview
-  m_LastInspectedObjectInstanceID: -32334492
+  m_LastInspectedObjectInstanceID: -37173656
   m_LastVerticalScrollValue: 0
   m_GlobalObjectId: 
   m_InspectorMode: 0

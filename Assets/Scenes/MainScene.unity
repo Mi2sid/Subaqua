@@ -8230,7 +8230,7 @@ PrefabInstance:
       objectReference: {fileID: -466152427658068291, guid: d0759a60b7f5b2343a81d60ad6e3ed6d, type: 3}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: spawnRay
-      value: 20
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: boidParam
@@ -8350,7 +8350,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: percentSpawn.Array.data[4]
-      value: 10
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495023, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: m_Name

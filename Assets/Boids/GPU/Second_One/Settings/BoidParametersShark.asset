@@ -21,9 +21,9 @@ MonoBehaviour:
   maxSteerForce: 3
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 1152
+    m_Bits: 1160
   weight: 8
-  detectCollDst: 5
+  detectCollDst: 20
   scareLayer:
     serializedVersion: 2
     m_Bits: 0

@@ -145,7 +145,7 @@ public class Manager : MonoBehaviour
         }
         //zFarCalcul = CalculateDynamicZFar(newBoids, zFarCalcul, zFar);
         //zFar = CalculateDynamicZFarActive(zFarCalcul, zFar);
-        UnityEngine.Debug.Log($"Active Boids: {activeBoids}, Inactive Boids: {inactiveBoids}, New Boids: {newBoids}, not new boids: {notNewBoids}, total boids :{newBoids + notNewBoids}, zFar :{zFar},  zFarCalcul:{zFarCalcul}");
+        //UnityEngine.Debug.Log($"Active Boids: {activeBoids}, Inactive Boids: {inactiveBoids}, New Boids: {newBoids}, not new boids: {notNewBoids}, total boids :{newBoids + notNewBoids}, zFar :{zFar},  zFarCalcul:{zFarCalcul}");
     }
 
     float CalculateDynamicZFar(int newBoidsCount, float zFarCalcul, float zFar)
