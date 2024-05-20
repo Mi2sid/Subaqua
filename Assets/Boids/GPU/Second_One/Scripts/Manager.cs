@@ -1,7 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using Unity.Burst;
+using Unity.Jobs;
+using Unity.Collections;
 using UnityEngine;
+using System.Linq;
 
 public class Manager : MonoBehaviour
 {
@@ -21,6 +25,11 @@ public class Manager : MonoBehaviour
 
     public float[] percentSpawn;
 
+    public float zFar; // Distance maximale entre la caméra et les boids
+    public float zNear;
+    public LayerMask obstacleLayer;
+    private Camera mainCamera;
+
     //Instanciation et initialisation des boids a une position et rotation aleatoire
     void Start()
     {
@@ -31,7 +40,7 @@ public class Manager : MonoBehaviour
         // Créez le ComputeBuffer avec la taille de votre liste de données
         ComputeBuffer parameterBuffer = new ComputeBuffer(listOfBoids.Length, sizeof(float) * 4);
 
-        List<CPU_PARAMETERS> listOfBoidData = new List<CPU_PARAMETERS>();       // mettre les données sur CPU pour ensuite sur GPU
+        List<CPU_PARAMETERS> listOfBoidData = new List<CPU_PARAMETERS>();
 
         for (int it = 0; it < listOfBoids.Length; it++)
         {
@@ -67,7 +76,7 @@ public class Manager : MonoBehaviour
 
                 listOfBoids[it].Add(boid);
 
-                boid.Init(boidParam[it]);       // initialise le boid
+                boid.Init(boidParam[it]);
             }
 
             CPU_PARAMETERS boidData = new CPU_PARAMETERS();
@@ -75,10 +84,11 @@ public class Manager : MonoBehaviour
             boidData.avoidRay = boidParam[it].avoidRay;
             boidData.maxSpeed = boidParam[it].maxSpeed;
             boidData.maxSteerForce = boidParam[it].maxSteerForce;
+
             listOfBoidData.Add(boidData);
         }
 
-        parameterBuffer.SetData(listOfBoidData.ToArray());      // mettre les données sur GPU
+        parameterBuffer.SetData(listOfBoidData.ToArray());
 
         // Passez le ComputeBuffer au shader
         computeShader.SetBuffer(0, "boidParameters", parameterBuffer);
@@ -86,88 +96,121 @@ public class Manager : MonoBehaviour
 
     void Update()
     {
+
         //Initailisation des parametres
         if (listOfBoids != null)
         {
-            Camera mainCamera = Camera.main;
-            if (mainCamera != null)
+            Camera cam = Camera.main;
+            
+            CPU_BOID[][] cpuBoid = new CPU_BOID[listOfBoids.Length][];
+            ComputeBuffer[] computeBuffer = new ComputeBuffer[listOfBoids.Length];
+
+
+            int activeBoids = 0;
+            int inactiveBoids = 0;
+
+            for (int it = 0; it < listOfBoids.Length; it++)
             {
-                CPU_BOID[][] cpuBoid = new CPU_BOID[listOfBoids.Length][];
-                ComputeBuffer[] computeBuffer = new ComputeBuffer[listOfBoids.Length];
-
-                for (int it = 0; it < listOfBoids.Length; it++)
+                if (listOfBoids[it] != null)
                 {
-                    if (listOfBoids[it] != null)
+                    int sizeListOfBoids = listOfBoids[it].Count;
+                    cpuBoid[it] = new CPU_BOID[sizeListOfBoids];
+
+                    //Creation du computeBuffer de la taille de la classe CPU_BOID
+                    computeBuffer[it] = new ComputeBuffer(sizeListOfBoids, (int)(sizeof(int) + 27 * sizeof(float)));
+
+                    //Le castage en (int) ne fonctionne pas autrement
+                    int threadGroups = Mathf.CeilToInt(sizeListOfBoids / (float)64);
+
+                    //Recuperation des donnees du boid a l'instant t
+                    for (int i = 0; i < listOfBoids[it].Count; i++)
                     {
-                        int sizeListOfBoids = listOfBoids[it].Count;                // on récupère le nombre de boid de chaque type de boid.
-                        //{ UnityEngine.Debug.Log("Score du joueur : " + sizeListOfBoids); }
-
-                        cpuBoid[it] = new CPU_BOID[sizeListOfBoids];
-
-                        //Creation du computeBuffer de la taille de la classe CPU_BOID
-                        computeBuffer[it] = new ComputeBuffer(sizeListOfBoids, (int)(sizeof(int) + 27 * sizeof(float)));
-
-                        //Le castage en (int) ne fonctionne pas autrement
-                        int threadGroups = Mathf.CeilToInt(sizeListOfBoids / (float)64);
-
-                        for (int i = 0; i < listOfBoids[it].Count; i++)
+                        if (IsInView(cam, listOfBoids[it][i].transform.position))
                         {
-                            Boid boid = listOfBoids[it][i];
-                            Vector3 viewportPos = mainCamera.WorldToViewportPoint(boid.transform.position);
-
-                            // Check if boid is within the camera's viewport
-                            if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
-                            {
-                                cpuBoid[it][i].pos = boid.transform.position;
-                                cpuBoid[it][i].dir = boid.transform.forward;
-                                cpuBoid[it][i].vel = boid.velocity;
-                            }
+                            cpuBoid[it][i].pos = listOfBoids[it][i].transform.position;
+                            cpuBoid[it][i].dir = listOfBoids[it][i].transform.forward;
+                            cpuBoid[it][i].vel = listOfBoids[it][i].velocity;
                         }
 
-                        //Passage des parametres au GPU
-                        computeBuffer[it].SetData(cpuBoid[it]);
+                    }
 
-                        computeShader.SetBuffer(0, "boids", computeBuffer[it]);
-                        computeShader.SetInt("sizeListOfBoids", listOfBoids[it].Count);
-                        computeShader.SetInt("listOfBoidID", it);
+                    //Passage des parametres au GPU
+                    computeBuffer[it].SetData(cpuBoid[it]);
 
-                        //Appel du compute shader (GPU)
-                        computeShader.Dispatch(0, threadGroups, 1, 1);
+                    computeShader.SetBuffer(0, "boids", computeBuffer[it]);
+                    computeShader.SetInt("sizeListOfBoids", listOfBoids[it].Count);
+                    computeShader.SetInt("listOfBoidID", it);
 
-                        //Recuperation des donnees calculee par le compute shader
-                        computeBuffer[it].GetData(cpuBoid[it]);
-                        computeBuffer[it].Dispose();
+                    //Appel du compute shader (GPU)
+                    computeShader.Dispatch(0, threadGroups, 1, 1);
 
-                        //Attribution de ces valeurs aux boids de la scene (maj CPU)
-                        for (int i = 0; i < listOfBoids[it].Count; i++)
+                    //Recuperation des donnees calculees par le compute shader
+                    computeBuffer[it].GetData(cpuBoid[it]);
+                    computeBuffer[it].Dispose();
+
+                    //Attribution de ces valeurs aux boids de la scene (maj CPU)
+                    for (int i = 0; i < listOfBoids[it].Count; i++)
+                    {
+                        listOfBoids[it][i].nbTeammates = cpuBoid[it][i].nbTeammates;
+
+                        listOfBoids[it][i].alignmentForce = cpuBoid[it][i].alignmentForce;
+                        listOfBoids[it][i].cohesionForce = cpuBoid[it][i].cohesionForce;
+                        listOfBoids[it][i].seperationForce = cpuBoid[it][i].seperationForce;
+
+                        //Debug des 3 lois
+                        /*Debug.Log("GPU 1: " + listOfBoids[i].alignmentForce);
+                        Debug.Log("GPU 2: " + listOfBoids[i].cohesionForce);
+                        Debug.Log("GPU 3: " + listOfBoids[i].seperationForce);*/
+
+                        if (IsInView(cam, listOfBoids[it][i].transform.position))
                         {
-                            Boid boid = listOfBoids[it][i];
-                            Vector3 viewportPos = mainCamera.WorldToViewportPoint(boid.transform.position);
-
-                            // Check if boid is within the camera's viewport
-                            if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
-                            {
-                                boid.nbTeammates = cpuBoid[it][i].nbTeammates;
-                                boid.alignmentForce = cpuBoid[it][i].alignmentForce;
-                                boid.cohesionForce = cpuBoid[it][i].cohesionForce;
-                                boid.seperationForce = cpuBoid[it][i].seperationForce;
-
-                                //Debug des 3 lois
-                                /*Debug.Log("GPU 1: " + listOfBoids[i].alignmentForce);
-                                Debug.Log("GPU 2: " + listOfBoids[i].cohesionForce);
-                                Debug.Log("GPU 3: " + listOfBoids[i].seperationForce);*/
-
-                                boid.new_Boid();
-                            }
+                            listOfBoids[it][i].gameObject.SetActive(true);
+                            listOfBoids[it][i].new_Boid();
+                            activeBoids++;
+                        }
+                        else
+                        {
+                            listOfBoids[it][i].gameObject.SetActive(false);
+                            inactiveBoids++;
                         }
                     }
                 }
 
-                cpuBoid = null;
-                computeBuffer = null;
-                //computeBuffer.Release();
+
+
             }
+
+            cpuBoid = null;
+            computeBuffer = null;
+            //computeBuffer.Release();
+            UnityEngine.Debug.Log($"Active Boids: {activeBoids}, Inactive Boids: {inactiveBoids}");
         }
+
+    }
+
+
+    bool IsInView(Camera cam, Vector3 worldPosition)
+    {
+        Vector3 viewportPos = cam.WorldToViewportPoint(worldPosition);
+        float distance = Vector3.Distance(cam.transform.position, worldPosition);
+
+        // Check if within view frustum with margin
+        bool isInViewFrustum = viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z > 0;
+
+        if (!isInViewFrustum)
+        {
+            return false;
+        }
+
+        // Raycast to check if there is an obstacle between the camera and the boid
+        RaycastHit hit;
+        if (Physics.Raycast(cam.transform.position, worldPosition - cam.transform.position, out hit, distance, obstacleLayer))
+        {
+            // An obstacle is blocking the view
+            return false;
+        }
+
+        return true;
     }
 
     public struct CPU_PARAMETERS
