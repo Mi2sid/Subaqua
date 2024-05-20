@@ -25,6 +25,7 @@ public class Manager : MonoBehaviour
     public float zFarCalcul;
     public LayerMask obstacleLayer;
     public float frustumMargin;
+    public float raycastMargin;
 
     void Start()
     {
@@ -86,6 +87,7 @@ public class Manager : MonoBehaviour
         int activeBoids = 0;
         int inactiveBoids = 0;
         int newBoids = 0;
+        int notNewBoids = 0;
 
         for (int it = 0; it < listOfBoids.Length; it++)
         {
@@ -116,7 +118,6 @@ public class Manager : MonoBehaviour
             {
                 Boid currentBoid = listOfBoids[it][i];
 
-
                 if (IsInView(cam, currentBoid.transform.position))
                 {
                     currentBoid.gameObject.SetActive(true);
@@ -137,27 +138,65 @@ public class Manager : MonoBehaviour
                     currentBoid.new_Boid();
                     newBoids++;
                 }
+                else notNewBoids++;
+
+
             }
         }
-
-        UnityEngine.Debug.Log($"Active Boids: {activeBoids}, Inactive Boids: {inactiveBoids}, New Boids: {newBoids}");
+        //zFarCalcul = CalculateDynamicZFar(newBoids, zFarCalcul, zFar);
+        //zFar = CalculateDynamicZFarActive(zFarCalcul, zFar);
+        UnityEngine.Debug.Log($"Active Boids: {activeBoids}, Inactive Boids: {inactiveBoids}, New Boids: {newBoids}, not new boids: {notNewBoids}, total boids :{newBoids + notNewBoids}, zFar :{zFar},  zFarCalcul:{zFarCalcul}");
     }
+
+    float CalculateDynamicZFar(int newBoidsCount, float zFarCalcul, float zFar)
+    {
+        // Adjust zFarCalcul based on the number of new boids
+        // You can define your own formula here based on your specific requirements
+        // For example, you can use a linear or exponential function to adjust zFarCalcul
+        // based on the number of new boids.
+        // This is just a simple example, you can adjust it as needed.
+        float newZFarCalcul = 0;
+        if (newBoidsCount >= 300) 
+        {
+            newZFarCalcul = Mathf.Max((zFarCalcul - 1), -1);
+            
+        }
+        else if (newBoidsCount <= 300) 
+        {
+            newZFarCalcul = zFarCalcul + 0.5f;
+        }
+
+
+        return newZFarCalcul;
+    }
+
+    float CalculateDynamicZFarActive(float ZfarCalcul, float zFar) 
+    {
+        if (ZfarCalcul < zFar) zFar = Mathf.Max(zFar - 5f, 25f);
+        else if (zFar < ZfarCalcul + 5f && zFar < 40f) zFar += 5f;
+        return zFar;
+    }
+
 
     bool IsInView(Camera cam, Vector3 worldPosition)
     {
         Vector3 viewportPos = cam.WorldToViewportPoint(worldPosition);
         float distance = Vector3.Distance(cam.transform.position, worldPosition);
 
-        bool isInViewFrustum = viewportPos.x >= -frustumMargin && viewportPos.x <= 1 + frustumMargin &&
+        bool isInViewFrustum = (viewportPos.x >= -frustumMargin && viewportPos.x <= 1 + frustumMargin &&
                                viewportPos.y >= -frustumMargin && viewportPos.y <= 1 + frustumMargin &&
-                               viewportPos.z > 0 && distance <= zFar;
+                               viewportPos.z > 0 && distance <= zFar) || distance <= zNear;
 
         if (!isInViewFrustum)
         {
             return false;
         }
 
-        return !Physics.Raycast(cam.transform.position, worldPosition - cam.transform.position, out _, distance, obstacleLayer);
+        // Adjust the direction for the raycast to include margin
+        Vector3 rayDirection = worldPosition - cam.transform.position;
+        rayDirection += rayDirection.normalized * raycastMargin;
+
+        return !Physics.Raycast(cam.transform.position, rayDirection, out _, distance, obstacleLayer);
     }
 
     bool IsFar(Camera cam, Vector3 worldPosition)
