@@ -150,11 +150,7 @@ public class Manager : MonoBehaviour
 
     float CalculateDynamicZFar(int newBoidsCount, float zFarCalcul, float zFar)
     {
-        // Adjust zFarCalcul based on the number of new boids
-        // You can define your own formula here based on your specific requirements
-        // For example, you can use a linear or exponential function to adjust zFarCalcul
-        // based on the number of new boids.
-        // This is just a simple example, you can adjust it as needed.
+        // ajuste zFarCalcul en fonction du nombre de nouveaux boids calculés.
         float newZFarCalcul = 0;
         if (newBoidsCount >= 300) 
         {
