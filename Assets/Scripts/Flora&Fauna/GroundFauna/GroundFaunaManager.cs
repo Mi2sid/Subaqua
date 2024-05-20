@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
-
+using System.Threading;
 public class GroundFaunaManager : MonoBehaviour
 {
     public List<GameObject> groundFauna;
@@ -13,11 +13,19 @@ public class GroundFaunaManager : MonoBehaviour
 
     private int firstId = -1;
 
+
+    public struct GroundFaunaDataResult
+    {
+        public GroundManager.MeshPointInfo[] infos;
+        public int[] groundFaunaCount;
+    }
+
+
     private void Awake()
     {
         groundFaunaIds = new int[groundFauna.Count];
 
-        // Création des reserves d'objets pour la faune
+        // Crï¿½ation des reserves d'objets pour la faune
         ChunkSystem chunkSystem = GetComponent<ChunkSystem>();
         int maxObjects = ((chunkSystem.viewDist * 2 + 1) + (chunkSystem.hviewDist * 2 + 1)) * Vars.GROUNDFAUNA_DENSITY;
 
@@ -30,7 +38,7 @@ public class GroundFaunaManager : MonoBehaviour
 
     /// <summary>
     /// Initialise la faune sur le mesh selon les infos contenues dans 'infos'.
-    /// Il faut également spécifier le parent de l'objet (chunk) et donner le 'fauneCount'
+    /// Il faut ï¿½galement spï¿½cifier le parent de l'objet (chunk) et donner le 'fauneCount'
     /// </summary>
     public GroundManager.MeshGround InitializeGroundFauna(Transform parent, GroundManager.MeshPointInfo[] infos, int[] groundFaunaCount, GroundManager.Biome biome)
     {
@@ -39,7 +47,7 @@ public class GroundFaunaManager : MonoBehaviour
             return new GroundManager.MeshGround(null, null);
         }
 
-        // Récupération des réserves de faune
+        // Rï¿½cupï¿½ration des rï¿½serves de faune
         Dictionary<int, GameObject[]> pool = new Dictionary<int, GameObject[]>(groundFauna.Count);
         Dictionary<int, int> nextId = new Dictionary<int, int>(groundFauna.Count);
         for (int i = 0; i < groundFauna.Count; i++)
@@ -92,7 +100,7 @@ public class GroundFaunaManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Libère la faune d'un mesh
+    /// Libï¿½re la faune d'un mesh
     /// </summary>
     public void FreeGroundFauna(GroundManager.MeshGround meshGroundFauna)
     {
@@ -103,7 +111,7 @@ public class GroundFaunaManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Calcule les positions de la faune sur un mesh, retourne en référance les infos et le compteur de faune.
+    /// Calcule les positions de la faune sur un mesh, retourne en rï¿½fï¿½rance les infos et le compteur de faune.
     /// Le compteur de faune permet uniquement de ne pas recompter le nombre de chaque faune sur le mesh
     /// </summary>
     public void GetGroundFaunaData(Mesh mesh, out GroundManager.MeshPointInfo[] infos, out int[] groundFaunaCount)
@@ -117,16 +125,17 @@ public class GroundFaunaManager : MonoBehaviour
         }
         Vector3[] vertices = mesh.vertices;
         Vector3[] normals = mesh.normals;
+        System.Random random = new System.Random();
 
         int groundFaunaDenstiy = Vars.GROUNDFAUNA_DENSITY * (triangles.Length / 3) / Vars.REF_CHUNK_TRI_COUNT;
 
-        // Génération des infos
+        // Gï¿½nï¿½ration des infos
         infos = new GroundManager.MeshPointInfo[groundFaunaDenstiy];
         groundFaunaCount = new int[groundFauna.Count];
 
         for (int i = 0; i < groundFaunaDenstiy; i++)
         {
-            GroundManager.MeshPointInfo pointInfo = GroundManager.GetRandomPointOnMesh(triangles, vertices, normals, 360);
+            GroundManager.MeshPointInfo pointInfo = GroundManager.GetRandomPointOnMesh(triangles, vertices, normals, 360, random);
 
             pointInfo.elementId = groundFaunaIds[Random.Range(0, groundFauna.Count)] - firstId;
 
@@ -134,4 +143,51 @@ public class GroundFaunaManager : MonoBehaviour
             infos[i] = pointInfo;
         }
     }
+
+
+    public void GetGroundFaunaDataAsync(Mesh mesh,  Action<GroundFaunaDataResult> onComplete)
+    {
+        int[] triangles = mesh.triangles;
+        if (triangles.Length < 3)
+        {
+            return;
+        }
+        Vector3[] vertices = mesh.vertices;
+        Vector3[] normals = mesh.normals;
+        System.Random random = new System.Random();
+
+       // Lancer un nouveau thread pour effectuer les calculs intensifs
+        Thread thread = new Thread(() =>
+        {
+            var result = GenerateGroundFaunaData(triangles, vertices, normals, random);
+            onComplete.Invoke(result);
+        });
+        thread.Start();
+
+
+    }
+
+
+    private GroundFaunaDataResult GenerateGroundFaunaData(int[] triangles, Vector3[] vertices, Vector3[] normals, System.Random random)
+    {
+        int groundFaunaDenstiy = Vars.GROUNDFAUNA_DENSITY * (triangles.Length / 3) / Vars.REF_CHUNK_TRI_COUNT;
+
+        // Gï¿½nï¿½ration des infos
+        GroundManager.MeshPointInfo[] infos = new GroundManager.MeshPointInfo[groundFaunaDenstiy];
+        int[] groundFaunaCount = new int[groundFauna.Count];
+
+        for (int i = 0; i < groundFaunaDenstiy; i++)
+        {
+            GroundManager.MeshPointInfo pointInfo = GroundManager.GetRandomPointOnMesh(triangles, vertices, normals, 360, random);
+
+            pointInfo.elementId = groundFaunaIds[random.Next(0, groundFauna.Count)] - firstId;
+
+
+            groundFaunaCount[pointInfo.elementId]++;
+            infos[i] = pointInfo;
+        }
+
+        return new GroundFaunaDataResult { infos = infos, groundFaunaCount = groundFaunaCount };
+    }
+
 }

@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   worldSize: {x: 16, y: 16, z: 16}
   voxelDensity: {x: 32, y: 32, z: 32}
+  voxelDensitySimple: {x: 16, y: 16, z: 16}

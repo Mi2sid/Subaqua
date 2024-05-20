@@ -65,11 +65,11 @@ public class GroundManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Retourne de manière aléatoire des points sur le mesh
+    /// Retourne de maniï¿½re alï¿½atoire des points sur le mesh
     /// </summary>
-    public static MeshPointInfo GetRandomPointOnMesh(int[] triangles, Vector3[] vertices, Vector3[] normals, float slopeAngle)
+    public static MeshPointInfo GetRandomPointOnMesh(int[] triangles, Vector3[] vertices, Vector3[] normals, float slopeAngle, System.Random random)
     {
-        int triIndex = Random.Range(0, triangles.Length / 3);
+        int triIndex = random.Next(0, triangles.Length / 3);
 
         Vector3 a = vertices[triangles[triIndex * 3]];
         Vector3 b = vertices[triangles[triIndex * 3 + 1]];
@@ -79,8 +79,8 @@ public class GroundManager : MonoBehaviour
         Vector3 nb = normals[triangles[triIndex * 3 + 1]];
         Vector3 nc = normals[triangles[triIndex * 3 + 2]];
 
-        float r = Random.value;
-        float s = Random.Range(r, 1f);
+        float r = (float)random.NextDouble();
+        float s = (float)(random.NextDouble() * (1.0 - r) + r);
 
         Vector3 pointOnMesh = a + r * (b - a) + s * (c - a);
         Vector3 normalAtPoint = na + r * (nb - na) + s * (nc - na);
@@ -88,3 +88,27 @@ public class GroundManager : MonoBehaviour
         return new MeshPointInfo(pointOnMesh, normalAtPoint, (Vector3.Angle(Vector3.up, normalAtPoint) > slopeAngle ? MeshPointState.SLOPE : MeshPointState.FLAT), 0);
     }
 }
+
+
+    // public static MeshPointInfo GetRandomPointOnMesh(int[] triangles, Vector3[] vertices, Vector3[] normals, float slopeAngle)
+    // {
+    //     System.Random randomGenerator = new System.Random();
+
+    //     int triIndex = randomGenerator.Next(0, triangles.Length / 3);
+
+    //     Vector3 a = vertices[triangles[triIndex * 3]];
+    //     Vector3 b = vertices[triangles[triIndex * 3 + 1]];
+    //     Vector3 c = vertices[triangles[triIndex * 3 + 2]];
+
+    //     Vector3 na = normals[triangles[triIndex * 3]];
+    //     Vector3 nb = normals[triIndex * 3 + 1];
+    //     Vector3 nc = normals[triIndex * 3 + 2];
+
+    //     float r = (float)randomGenerator.NextDouble();
+    //     float s = (float)randomGenerator.NextDouble() * (1f - r) + r;
+
+    //     Vector3 pointOnMesh = a + r * (b - a) + s * (c - a);
+    //     Vector3 normalAtPoint = na + r * (nb - na) + s * (nc - na);
+
+    //     return new MeshPointInfo(pointOnMesh, normalAtPoint, (Vector3.Angle(Vector3.up, normalAtPoint) > slopeAngle ? MeshPointState.SLOPE : MeshPointState.FLAT), 0);
+    // }

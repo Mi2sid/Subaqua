@@ -8242,7 +8242,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: nbOfBoids
-      value: 250
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: spawnCount
@@ -17579,7 +17579,7 @@ MonoBehaviour:
   voxelsGeneratorCS: {fileID: 7200000, guid: 112d00709f5d2b04f89c219c33b1c529, type: 3}
   computeNormalsCS: {fileID: 7200000, guid: 27f3ac8c18c823549b364543935f5815, type: 3}
   marchingCubesCS: {fileID: 7200000, guid: 74e85340078ae8d4689b0bf74130fedb, type: 3}
-  asyncLatency: 0.00005
+  asyncLatency: 5e-10
   chunkPrefab: {fileID: 8481928928349744168, guid: 073872c480f14574d85a04f9f1f12a06, type: 3}
   chunkParameters: {fileID: 11400000, guid: f27d0c302cd4859429313abffc7e6d34, type: 2}
   chunkHeightNb: 5
@@ -17606,6 +17606,7 @@ MonoBehaviour:
   hviewDist: 2
   hpreGenDist: 3
   hstartupGenDist: 3
+  distanceLOD: 2
   chunkUpdatePerFrame: 50
   childs: []
 --- !u!4 &8523529218284432029

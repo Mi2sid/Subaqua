@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using System.Threading;
 
 public class FloraManager : MonoBehaviour
 {
@@ -14,6 +14,12 @@ public class FloraManager : MonoBehaviour
 
     private int[] slopeFloraIds;
     private int[] flatFloraIds;
+
+    public struct FloraDataResult
+    {
+        public GroundManager.MeshPointInfo[] infos;
+        public int[] floraCount;
+    }
 
     private void Awake()
     {
@@ -36,7 +42,6 @@ public class FloraManager : MonoBehaviour
     /// </summary>
     public GroundManager.MeshGround InitializeFlora(Transform parent, GroundManager.MeshPointInfo[] infos, int[] floraCount, GroundManager.Biome biome)
     {
-        Camera mainCamera = Camera.main;
         if (infos == null)
         {
             return new GroundManager.MeshGround(null, null);
@@ -99,19 +104,7 @@ public class FloraManager : MonoBehaviour
                     }
                     flora.position = parent.position + infos[i].pos - infos[i].normal * 0.05f;
                     flora.localScale = Vector3.one * Random.Range(0.4f, 1f);
-
-
-                    /*Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
-                    if (IsObjectVisible(frustumPlanes, flora.position))
-                    {
-                        flora.gameObject.SetActive(true); // Si visible, activer l'objet
-                    }
-                    else 
-                    {
-                        flora.gameObject.SetActive(false);
-                    }*/
-
-                    flora.gameObject.SetActive(true);           //
+                    flora.gameObject.SetActive(true);
                     flora.transform.parent = parent;
                 }
             }
@@ -138,17 +131,7 @@ public class FloraManager : MonoBehaviour
                     }
                     flora.position = parent.position + infos[i].pos - infos[i].normal * 0.05f;
                     flora.localScale = Vector3.one * Random.Range(0.4f, 1f);
-
-                   /* Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
-                    if (IsObjectVisible(frustumPlanes, flora.position))
-                    {
-                        flora.gameObject.SetActive(true); // Si visible, activer l'objet
-                    }
-                    else
-                    {
-                        flora.gameObject.SetActive(false);
-                    }*/
-                    flora.gameObject.SetActive(true);           //
+                    flora.gameObject.SetActive(true);
                     flora.transform.parent = parent;
                 }
 
@@ -187,8 +170,10 @@ public class FloraManager : MonoBehaviour
         }
         Vector3[] vertices = mesh.vertices;
         Vector3[] normals = mesh.normals;
+        System.Random random = new System.Random();
 
-        int floraDenstiy = Vars.FLORA_DENSITY[(int)biome] * (triangles.Length / 3) / Vars.REF_CHUNK_TRI_COUNT;
+
+        int floraDenstiy = Vars.FLORA_DENSITY[(int)biome] * triangles.Length / Vars.REF_CHUNK_TRI_COUNT;
 
         // Génération des infos
         infos = new GroundManager.MeshPointInfo[floraDenstiy];
@@ -196,7 +181,7 @@ public class FloraManager : MonoBehaviour
 
         for (int i = 0; i < floraDenstiy; i++)
         {
-            GroundManager.MeshPointInfo pointInfo = GroundManager.GetRandomPointOnMesh(triangles, vertices, normals, slopeAngle);
+            GroundManager.MeshPointInfo pointInfo = GroundManager.GetRandomPointOnMesh(triangles, vertices, normals, slopeAngle, random);
 
             if (pointInfo.state == GroundManager.MeshPointState.FLAT)
                 pointInfo.elementId = flatFloraIds[Random.Range(0, flatFlora.Count)];
@@ -208,56 +193,53 @@ public class FloraManager : MonoBehaviour
         }
     }
 
-    public void IsVisible() 
+
+    public void GetFloraDataAsync(Mesh mesh,  Action<FloraDataResult> onComplete,  GroundManager.Biome biome)
     {
-        Camera mainCamera = Camera.main;
-        if (mainCamera != null) 
+        int[] triangles = mesh.triangles;
+        if (triangles.Length < 3)
         {
-            Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
-            foreach (GameObject floraObject in slopeFlora)
-            {
-                Vector3 viewportPos = mainCamera.WorldToViewportPoint(floraObject.transform.position);
-                if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
-                {
-                    floraObject.SetActive(false);
-                    UnityEngine.Debug.Log("GPU 1: ");
-                }
-                else
-                {
-                    floraObject.SetActive(false); // Sinon, désactiver l'objet
-                }
-            }
-
-
-
-            foreach (GameObject floraObject in flatFlora)
-            {
-                Vector3 viewportPos = mainCamera.WorldToViewportPoint(floraObject.transform.position);
-                if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
-                {
-                    floraObject.SetActive(false);
-                }
-                else
-                {
-                    floraObject.SetActive(false); // Sinon, désactiver l'objet
-                }
-            }
+           return;
         }
+
+        // Récupérer les données du mesh sur le thread principal
+        Vector3[] vertices = mesh.vertices;
+        Vector3[] normals = mesh.normals;
+        System.Random random = new System.Random();
+
+        // Lancer un nouveau thread pour effectuer les calculs intensifs
+        Thread thread = new Thread(() =>
+        {
+            var result = GenerateFloraData(triangles, vertices, normals, biome, random);
+            onComplete.Invoke(result);
+        });
+        thread.Start();
     }
 
-
-
-    bool IsObjectVisible(Plane[] frustumPlanes, Vector3 position)
+    private FloraDataResult GenerateFloraData(int[] triangles, Vector3[] vertices, Vector3[] normals, GroundManager.Biome biome, System.Random random)
     {
-        foreach (Plane plane in frustumPlanes)
-        {
-            if (plane.GetDistanceToPoint(position) < 0)
-            {
-                return false; // Si la position est derrière l'un des plans du frustrum, elle est invisible
-            }
-        }
-        return true; // Sinon, la position est visible
-    }
+        int floraDensity = (Vars.FLORA_DENSITY[(int)biome] * triangles.Length / Vars.REF_CHUNK_TRI_COUNT);
 
+        GroundManager.MeshPointInfo[] infos = new GroundManager.MeshPointInfo[floraDensity];
+        int[] floraCount = new int[flatFlora.Count + slopeFlora.Count];
+
+        for (int i = 0; i < floraDensity; i++)
+        {
+            GroundManager.MeshPointInfo pointInfo = GroundManager.GetRandomPointOnMesh(triangles, vertices, normals, slopeAngle, random);
+            if (pointInfo.state == GroundManager.MeshPointState.FLAT)
+                pointInfo.elementId = flatFloraIds[random.Next(0, flatFlora.Count)];
+            else
+                pointInfo.elementId = slopeFloraIds[random.Next(0, slopeFlora.Count)];
+
+            lock (floraCount)
+            {
+                floraCount[pointInfo.elementId]++;
+            }
+
+            infos[i] = pointInfo;
+        }
+
+        return new FloraDataResult { infos = infos, floraCount = floraCount };
+    }
 
 }
