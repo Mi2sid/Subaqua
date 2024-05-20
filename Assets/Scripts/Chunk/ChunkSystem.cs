@@ -232,7 +232,7 @@ public class ChunkSystem : MonoBehaviour
 
                 lastChunkPos = currentChunk;
             }
-
+            
             yield return new WaitForSeconds(updateTime * 2f);
         }
     }
@@ -356,13 +356,52 @@ public class ChunkSystem : MonoBehaviour
         return chunkGenQueue.Count;
     }
 
+
+    bool IsObjectVisible(Plane[] frustumPlanes, Vector3 position)
+    {
+        foreach (Plane plane in frustumPlanes)
+        {
+            if (plane.GetDistanceToPoint(position) < 0)
+            {
+                return false; // Si la position est derrière l'un des plans du frustrum, elle est invisible
+            }
+        }
+        return true; // Sinon, la position est visible
+    }
+
+
     public void Update()
     {
+        Camera mainCamera = Camera.main;
         foreach (GameObject child in childs)
         {
             if (child.activeInHierarchy)
+            {
                 child.GetComponent<MeshCollider>().enabled = true;
-            else child.GetComponent<MeshCollider>().enabled = false;
+            }
+            else
+            {
+                child.GetComponent<MeshCollider>().enabled = false;
+            }
+
+            /*Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
+            if ( (GeometryUtility.TestPlanesAABB(frustumPlanes, child.GetComponent<Renderer>().bounds)))
+            {
+                child.SetActive(true); // Si visible, activer l'objet
+            }
+            else
+            {
+                child.SetActive(false);
+            }*/
+
+            /*Vector3 viewportPos = mainCamera.WorldToViewportPoint(child.transform.position);
+            if (viewportPos.x >= 0 && viewportPos.x <= 1.5 && viewportPos.y >= 0 && viewportPos.y <= 1.5 && viewportPos.z >= 0) 
+            {
+                child.SetActive(true);
+            }
+            else child.SetActive(false);*/
+
+
         }
     }
 
