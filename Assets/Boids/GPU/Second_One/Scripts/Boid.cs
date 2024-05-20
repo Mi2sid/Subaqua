@@ -36,7 +36,7 @@ public class Boid : MonoBehaviour
     float scaredTimer = 0;
     Vector3 escapeDir = Vector3.zero;
 
-    private GameObject player;
+    public GameObject player;
 
     public float rayAngleOffset = 5f;
 

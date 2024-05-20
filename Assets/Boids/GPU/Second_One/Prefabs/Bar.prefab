@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 885496319332824875}
   - component: {fileID: 3131784695727018093}
   - component: {fileID: 8969891417072813422}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: BarSprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -110,7 +110,7 @@ GameObject:
   - component: {fileID: 6143187846230789828}
   - component: {fileID: 6221705148663715145}
   - component: {fileID: 6140077132315166252}
-  m_Layer: 8
+  m_Layer: 9
   m_Name: Bar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -218,7 +218,7 @@ GameObject:
   - component: {fileID: 4954625360103301698}
   - component: {fileID: -466152427658068291}
   - component: {fileID: 3385421548516049081}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Bar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -261,6 +261,8 @@ MonoBehaviour:
   cohesionForce: {x: 0, y: 0, z: 0}
   seperationForce: {x: 0, y: 0, z: 0}
   type: 0
+  player: {fileID: 0}
+  rayAngleOffset: 5
 --- !u!205 &3385421548516049081
 LODGroup:
   m_ObjectHideFlags: 0
@@ -275,11 +277,11 @@ LODGroup:
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
   m_LODs:
-  - screenRelativeHeight: 0.032355446
+  - screenRelativeHeight: 0.03466468
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 6143187846230789828}
-  - screenRelativeHeight: 0.008937791
+  - screenRelativeHeight: 0.007699363
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 3131784695727018093}

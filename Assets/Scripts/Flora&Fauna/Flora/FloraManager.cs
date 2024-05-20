@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -35,6 +36,7 @@ public class FloraManager : MonoBehaviour
     /// </summary>
     public GroundManager.MeshGround InitializeFlora(Transform parent, GroundManager.MeshPointInfo[] infos, int[] floraCount, GroundManager.Biome biome)
     {
+        Camera mainCamera = Camera.main;
         if (infos == null)
         {
             return new GroundManager.MeshGround(null, null);
@@ -97,7 +99,19 @@ public class FloraManager : MonoBehaviour
                     }
                     flora.position = parent.position + infos[i].pos - infos[i].normal * 0.05f;
                     flora.localScale = Vector3.one * Random.Range(0.4f, 1f);
-                    flora.gameObject.SetActive(true);
+
+
+                    /*Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
+                    if (IsObjectVisible(frustumPlanes, flora.position))
+                    {
+                        flora.gameObject.SetActive(true); // Si visible, activer l'objet
+                    }
+                    else 
+                    {
+                        flora.gameObject.SetActive(false);
+                    }*/
+
+                    flora.gameObject.SetActive(true);           //
                     flora.transform.parent = parent;
                 }
             }
@@ -124,7 +138,17 @@ public class FloraManager : MonoBehaviour
                     }
                     flora.position = parent.position + infos[i].pos - infos[i].normal * 0.05f;
                     flora.localScale = Vector3.one * Random.Range(0.4f, 1f);
-                    flora.gameObject.SetActive(true);
+
+                   /* Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
+                    if (IsObjectVisible(frustumPlanes, flora.position))
+                    {
+                        flora.gameObject.SetActive(true); // Si visible, activer l'objet
+                    }
+                    else
+                    {
+                        flora.gameObject.SetActive(false);
+                    }*/
+                    flora.gameObject.SetActive(true);           //
                     flora.transform.parent = parent;
                 }
 
@@ -183,4 +207,57 @@ public class FloraManager : MonoBehaviour
             infos[i] = pointInfo;
         }
     }
+
+    public void IsVisible() 
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null) 
+        {
+            Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(mainCamera);
+            foreach (GameObject floraObject in slopeFlora)
+            {
+                Vector3 viewportPos = mainCamera.WorldToViewportPoint(floraObject.transform.position);
+                if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
+                {
+                    floraObject.SetActive(false);
+                    UnityEngine.Debug.Log("GPU 1: ");
+                }
+                else
+                {
+                    floraObject.SetActive(false); // Sinon, désactiver l'objet
+                }
+            }
+
+
+
+            foreach (GameObject floraObject in flatFlora)
+            {
+                Vector3 viewportPos = mainCamera.WorldToViewportPoint(floraObject.transform.position);
+                if (viewportPos.x >= 0 && viewportPos.x <= 1 && viewportPos.y >= 0 && viewportPos.y <= 1 && viewportPos.z >= 0)
+                {
+                    floraObject.SetActive(false);
+                }
+                else
+                {
+                    floraObject.SetActive(false); // Sinon, désactiver l'objet
+                }
+            }
+        }
+    }
+
+
+
+    bool IsObjectVisible(Plane[] frustumPlanes, Vector3 position)
+    {
+        foreach (Plane plane in frustumPlanes)
+        {
+            if (plane.GetDistanceToPoint(position) < 0)
+            {
+                return false; // Si la position est derrière l'un des plans du frustrum, elle est invisible
+            }
+        }
+        return true; // Sinon, la position est visible
+    }
+
+
 }

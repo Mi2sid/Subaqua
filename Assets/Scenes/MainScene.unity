@@ -8197,6 +8197,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
+      propertyPath: zFar
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
+      propertyPath: zNear
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: iteRay
       value: 10
       objectReference: {fileID: 0}
@@ -8210,7 +8218,7 @@ PrefabInstance:
       objectReference: {fileID: -466152427658068291, guid: d0759a60b7f5b2343a81d60ad6e3ed6d, type: 3}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: spawnRay
-      value: 50
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: boidParam
@@ -8222,11 +8230,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: nbOfBoids
-      value: 250
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: spawnCount
       value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
+      propertyPath: zFarCalcul
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: boidManager
@@ -8245,12 +8257,20 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7200000, guid: c51b961c8b9d746f1a2f242fa7bf1a31, type: 3}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
+      propertyPath: frustumMargin
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: prefabs.Array.size
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: boidParam.Array.size
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
+      propertyPath: obstacleLayer.m_Bits
+      value: 1024
       objectReference: {fileID: 0}
     - target: {fileID: 6174357898892495022, guid: b8fac9e1ed391ca4a8dc001445bfd297, type: 3}
       propertyPath: prefabs.Array.data[0]
@@ -9586,7 +9606,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 963194229}
-  baseSpeed: 0.8
+  baseSpeed: 10
   mouseSensitivity: 8
   spotLight: {fileID: 2127924232}
   light_img: {fileID: 438932120}
