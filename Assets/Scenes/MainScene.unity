@@ -9359,7 +9359,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1afb8d40947c31841ac40120ece64238, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseSpeed: 2
+  baseSpeed: 3
   scrollSpeedMultiplier: 0.1
   mousePressSpeedMultiplier: 10
   mouseSensitivity: 10
@@ -9586,7 +9586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 963194229}
-  baseSpeed: 0.8
+  baseSpeed: 3
   mouseSensitivity: 8
   spotLight: {fileID: 2127924232}
   light_img: {fileID: 438932120}

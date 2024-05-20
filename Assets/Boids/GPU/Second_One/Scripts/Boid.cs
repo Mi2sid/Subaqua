@@ -29,16 +29,21 @@ public class Boid : MonoBehaviour
     [HideInInspector]
     public Vector3 seperationForce;
 
+
     BoidParameters boidParam;
 
     public Type type;
 
     float scaredTimer = 0;
-    Vector3 escapeDir = Vector3.zero;
 
     private GameObject player;
 
-    public float rayAngleOffset = 5f;
+    public float rayAngleOffset = 0.2f;
+
+    //private NativeArray<RaycastCommand> raycastCommand;
+    //private NativeArray<RaycastHit> raycastResults;
+
+    private RaycastHit[] hits;
 
     public enum Type
     {
@@ -48,36 +53,6 @@ public class Boid : MonoBehaviour
         ChirurgienBleu = 3,
         Shark = 4
     }
-
-    //[BurstCompile]
-    //public struct SphereCastJob : IJobParallelFor
-    //{
-    //    public Vector3 position;
-    //    public Quaternion rotation;
-    //    [Unity.Collections.ReadOnlyAttribute] public NativeArray<Vector3> tab_Dir;
-    //    public float sphereRad;
-    //    public float detectCollDst;
-    //    public LayerMask obstacleLayer;
-    //    public Vector3 escapeDirs;
-    //    public bool foundEscape;
-
-    //    public void Execute(int index)
-    //    {
-    //        if (foundEscape)
-    //            return; // If escape direction already found, exit early
-
-    //        Vector3 dir_gold = rotation * tab_Dir[index];
-    //        Ray ray = new Ray(position, dir_gold);
-
-    //        bool canEscape = !Physics.SphereCast(ray, sphereRad, detectCollDst, obstacleLayer);
-
-    //        if (canEscape)
-    //        {
-    //            escapeDirs = dir_gold;
-    //            foundEscape = true; // Set flag to indicate escape direction found
-    //        }
-    //    }
-    //}
 
     //Creation des rayons de la sphere de la Fibonacci
     public void Awake()
@@ -103,42 +78,45 @@ public class Boid : MonoBehaviour
         this.boidParam = param;
 
         velocity = transform.forward * boidParam.avgSpeed;
-    }
 
-    public bool terrain_collision(ref Vector3 collisionForce, ref Vector3 sumForce, ref Vector3 escapeDir)
+        hits = new RaycastHit[1];
+    //raycastCommand = new NativeArray<RaycastCommand>(2, Allocator.Persistent);
+    //raycastResults = new NativeArray<RaycastHit>(2, Allocator.Persistent);
+}
+
+    public bool terrain_collision(ref Vector3 collisionForce, ref Vector3 sumForce, Vector3 rayDirection)
     {
+
+        UnityEngine.Profiling.Profiler.BeginSample("RaycastNonAlloc");
         float maxOffset = Mathf.Tan(rayAngleOffset * Mathf.Deg2Rad);
 
-        Vector3 randomOffset = new Vector3(UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset));
-        Vector3 rayDirection = (transform.forward + randomOffset).normalized;
+        Vector3 escapeDir = -transform.forward;
 
-        RaycastHit hitTerrain;
-        if (Physics.Raycast(transform.position, rayDirection, out hitTerrain, boidParam.detectCollDst))
+        if (Physics.RaycastNonAlloc(transform.position, rayDirection, hits, boidParam.detectCollDst, boidParam.obstacleLayer) > 0)
         {
-            RaycastHit[] hits = new RaycastHit[1];
             //Parcours de la liste des directions echappatoires
-            for (int i = 0; i < tab_Dir.Length; i +=2)
+            for (int i = 0; i < 50; i +=2)
             {
                 Vector3 dir_gold = transform.TransformDirection(tab_Dir[i]);
-                Ray ray = new Ray(transform.position, dir_gold);
 
                 //Choisir cette direction si elle permet d'eviter l'obstacle
-                int nbCollision = Physics.RaycastNonAlloc(ray, hits, boidParam.detectCollDst, boidParam.obstacleLayer);
+                int nbCollision = Physics.RaycastNonAlloc(transform.position, dir_gold, hits, boidParam.detectCollDst, boidParam.obstacleLayer);
                 if (nbCollision == 0)
                 {
                     escapeDir = dir_gold;
                     break;
                 }
-                else escapeDir = transform.forward;
             }
                 //Mise a jour de la force finale avec la force d'evitement clamper a un maximum
             collisionForce = Vector3.ClampMagnitude(escapeDir.normalized * boidParam.maxSpeed - velocity, boidParam.maxSteerForce) * boidParam.weight;
 
-                //job.tab_Dir.Dispose();
             sumForce += collisionForce;
+
+            UnityEngine.Profiling.Profiler.EndSample();
             return true;
         }
 
+        UnityEngine.Profiling.Profiler.EndSample();
         return false;
 
     }
@@ -147,6 +125,12 @@ public class Boid : MonoBehaviour
     {
         Vector3 sumForce = Vector3.zero;
         Vector3 collisionForce = Vector3.zero;
+        Vector3 escapeDir = -transform.forward;
+
+        Vector3 randomOffset = new Vector3(UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset));
+        Vector3 newRayDirection = (transform.forward + randomOffset);
+
+        //bool checkCollisionPlayer = false;
 
         if (nbTeammates > 0)
         {
@@ -158,6 +142,7 @@ public class Boid : MonoBehaviour
 
         if (distanceBoidPlayer > 75)
         {
+
             escapeDir = player.transform.position - transform.position;
 
             //Mise a jour de la force finale avec une force rapprochant le poisson du joueur
@@ -175,30 +160,19 @@ public class Boid : MonoBehaviour
             {
                 if (boidParam.canBeScared)
                 {
-                    if (scaredTimer > 0)
-                    {
-                        scaredTimer -= Time.deltaTime;
-                        //Mise a jour de la force finale avec la force d'evitement clamper a un maximum
-                        escapeDir = ((player.transform.position - transform.position) + transform.forward) / 2;
-
-                        //Mise a jour de la force finale avec la force d'evitement clamper a un maximum
-                        collisionForce = -escapeDir.normalized * boidParam.escapeSpeed * boidParam.weight;
-
-                        sumForce += collisionForce;
-                    }
-
 
                     Vector3 directionToPlayer = player.transform.position - transform.position;
                     RaycastHit hitPlayer;
                     int layerMask = 1 << 3;
                     //collision avec le joueur uniquement
-                    if (Physics.Raycast(transform.position, directionToPlayer, out hitPlayer))
+                    if (Physics.Raycast(transform.position, directionToPlayer, out hitPlayer, boidParam.scareLayer))
                     {
                         //fuite
                         //escapeDir = -(transform.position - player.transform.position);
 
-                        float angleInRadians = 40f * Mathf.Deg2Rad;
+                        float angleInRadians = UnityEngine.Random.Range(30f, 69.8f) * Mathf.Deg2Rad;
 
+                        //on définit le signe de l'angle pour que la nouvelle direction l'éloigne du joueur
                         if (Vector3.Cross(directionToPlayer, transform.forward).y > 0)
                         {
                             angleInRadians = -angleInRadians;
@@ -210,17 +184,35 @@ public class Boid : MonoBehaviour
                             directionToPlayer.x * Mathf.Sin(angleInRadians) + directionToPlayer.z * Mathf.Cos(angleInRadians)
                         );
 
-                        // Normalisation de la nouvelle direction décalée
-                        Vector3 escapeDir = rotatedDirection.normalized;
+                        newRayDirection = rotatedDirection;
                         scaredTimer = UnityEngine.Random.Range(0.2f, 2);
 
+                        //Mise a jour de la force finale avec une force rapprochant le poisson du joueur
+                        collisionForce = newRayDirection.normalized * boidParam.escapeSpeed * boidParam.weight;
+
+                        sumForce += collisionForce;
+
+                    }
+                    //checkCollisionPlayer = true;
+                    
+
+                    if (scaredTimer > 0)
+                    {
+                        scaredTimer -= Time.deltaTime;
+                        //Mise a jour de la force finale avec la force d'evitement clamper a un maximum
+                        escapeDir = ((player.transform.position - transform.position) + transform.forward) / 2;
+
+                        //Mise a jour de la force finale avec la force d'evitement clamper a un maximum
+                        collisionForce = -escapeDir.normalized * boidParam.escapeSpeed * boidParam.weight;
+
+                        sumForce += collisionForce;
                     }
                 }
             }
-            terrain_collision(ref collisionForce, ref sumForce, ref escapeDir);
+            //collision_parallele(ref collisionForce, ref sumForce, checkCollisionPlayer);
+            terrain_collision(ref collisionForce, ref sumForce, newRayDirection);
             
         }
-
 
         //Mise à jour du mouvement avec la force finale
         velocity += sumForce * Time.deltaTime;
@@ -232,4 +224,76 @@ public class Boid : MonoBehaviour
         transform.position += velocity * Time.deltaTime;
         transform.position = new Vector3(transform.position.x, Mathf.Min(transform.position.y, 9.5f), transform.position.z);
     }
+
+    //public void collision_parallele(ref Vector3 collisionForce, ref Vector3 sumForce, bool collisionPlayer)
+    //{
+    //    // rayon joueur
+    //    Vector3 directionToPlayer = player.transform.position - transform.position;
+    //    raycastCommand[0] = new RaycastCommand(transform.position, directionToPlayer, 7f, boidParam.scareLayer);
+
+    //    // rayon terrain
+    //    Vector3 randomOffset = new Vector3(UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset), UnityEngine.Random.Range(-rayAngleOffset, rayAngleOffset));
+    //    Vector3 rayDirection = (transform.forward + randomOffset).normalized;
+    //    raycastCommand[1] = new RaycastCommand(transform.position, rayDirection, 10f, boidParam.obstacleLayer);
+
+    //    JobHandle jobHandle = RaycastCommand.ScheduleBatch(raycastCommand, raycastResults, 1, default);
+    //    jobHandle.Complete();
+
+    //    if (collisionPlayer)
+    //    {
+    //        if (raycastResults[0].collider != null)
+    //        {
+    //            float angleInRadians = UnityEngine.Random.Range(30f, 69.8f) * Mathf.Deg2Rad;
+
+    //            //on définit le signe de l'angle pour que la nouvelle direction l'éloigne du joueur
+    //            if (Vector3.Cross(directionToPlayer, transform.forward).y > 0)
+    //            {
+    //                angleInRadians = -angleInRadians;
+    //            }
+
+    //            Vector3 rotatedDirection = new Vector3(
+    //                directionToPlayer.x * Mathf.Cos(angleInRadians) - directionToPlayer.z * Mathf.Sin(angleInRadians),
+    //                directionToPlayer.y,
+    //                directionToPlayer.x * Mathf.Sin(angleInRadians) + directionToPlayer.z * Mathf.Cos(angleInRadians)
+    //            );
+
+    //            Vector3 escapeDir = rotatedDirection;
+    //            scaredTimer = UnityEngine.Random.Range(0.2f, 2);
+
+    //            //Mise a jour de la force finale avec une force rapprochant le poisson du joueur
+    //            collisionForce = escapeDir.normalized * boidParam.escapeSpeed * boidParam.weight;
+
+    //            sumForce += collisionForce;
+    //        }
+    //    }
+
+    //    if (raycastResults[1].collider != null)
+    //    {
+    //        Vector3 escapeDir = -transform.forward;
+    //        RaycastHit[] hits = new RaycastHit[1];
+    //        //Parcours de la liste des directions echappatoires
+    //        for (int i = 0; i < tab_Dir.Length; i += 2)
+    //        {
+    //            Vector3 dir_gold = transform.TransformDirection(tab_Dir[i]);
+    //            Ray ray = new Ray(transform.position, dir_gold);
+    //            //Choisir cette direction si elle permet d'eviter l'obstacle
+    //            int nbCollision = Physics.RaycastNonAlloc(ray, hits, boidParam.detectCollDst, boidParam.obstacleLayer);
+    //            if (nbCollision == 0)
+    //            {
+    //                escapeDir = dir_gold;
+    //                break;
+    //            }
+    //        }
+    //        //Mise a jour de la force finale avec la force d'evitement clamper a un maximum
+    //        collisionForce = Vector3.ClampMagnitude(escapeDir.normalized * boidParam.maxSpeed - velocity, boidParam.maxSteerForce) * boidParam.weight;
+
+    //        sumForce += collisionForce;
+    //    }
+    //}
+
+    //void OnDestroy()
+    //{
+    //    raycastCommand.Dispose();
+    //    raycastResults.Dispose();
+    //}
 }

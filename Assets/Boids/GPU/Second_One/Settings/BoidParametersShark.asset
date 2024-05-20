@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b44f765160a18428198d981d7e4c35, type: 3}
   m_Name: BoidParametersShark
   m_EditorClassIdentifier: 
-  avgSpeed: 2
+  avgSpeed: 1
   minSpeed: 1
   maxSpeed: 1
   escapeSpeed: 0
@@ -21,8 +21,7 @@ MonoBehaviour:
   maxSteerForce: 3
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 1160
-  sphereRad: 2
+    m_Bits: 1152
   weight: 8
   detectCollDst: 5
   scareLayer:
